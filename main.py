@@ -77,11 +77,8 @@ def go(index):
     my_ans = ''
     man = (index + 1) % COUNT
     while man != index and not answer(man):
-        if GAME.players[man].alive:
-            man = (man + 1) % COUNT
-            my_ans = ''
-        else:
-            pass
+        my_ans = ''
+        man = (man + 1) % COUNT
     if man == index:
         send_all('Nobody can help!')
     else:
@@ -191,6 +188,7 @@ def ask(message):
     send_all(players[d[message.chat.id]][1] + " asks: " + ', '.join(now_chosen))
     go(d[message.chat.id])
 
+    
 @bot.message_handler(commands = ['help'])
 def helpMessege(message):
     text = '/help - see this message again' + '\n' + '/play - join unstarted game' + '\n' + '/game - start new game with conected players' + '\n' + '/ask - ask one CLUEDO question' + '\n' + '/accuse - make accusation' + '\n' + '/finish - end of your turn'
@@ -203,7 +201,7 @@ def accuse(message):
     global active
     global GAME
     global CHOOSING_NOW
-    global NUMBER_OF_PEOPLE
+    global NUMBER_OF_PEOPLE     
     global HAS_ASKED
     
     if CHOOSING_NOW != d[message.chat.id]:

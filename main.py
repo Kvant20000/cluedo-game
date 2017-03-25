@@ -69,9 +69,9 @@ bot = telebot.TeleBot(TOKEN)
 my_ans = ''
 
 
-# @bot.message_handler()
-# def trash(message):
-# print(message.text)
+#@bot.message_handler()
+#def trash(message):
+#   print(message.text)
 
 def go(index):
     global my_ans
@@ -84,7 +84,7 @@ def go(index):
         send_all('Nobody can help!')
     else:
         bot.send_message(players[index][0], my_ans + ' from ' + players[man][1])
-        send_all('Answered by ' + players[man][1], [players[index]])
+        send_all('Answered by ' + players[man][1], [players[man]])
 
 
 def answer(man):
@@ -95,7 +95,7 @@ def answer(man):
     now = set(now_chosen)
     inter = now.intersection(cards)
 
-    #print(inter)
+    print(inter)
 
     if len(now.intersection(cards)) == 0:
         bot.send_message(id, "Choose answer: ", reply_markup=make(['NO']))
@@ -230,13 +230,14 @@ def accuse(message):
         send_all(players[d[message.chat.id]][1] + " has accused: " + ', '.join(now_chosen))
         send_all(players[d[message.chat.id]][1] + " didn't guess correctly! He's out of the game!")
         bot.send_message(message.chat.id, "Correct answer is: " + ', '.join(GAME.killed()))
-        nextTurn()
+        nextTurn(message)
 
     if NUMBER_OF_PEOPLE == 1:
         for i in range(len(GAME.players)):
             pl = GAME.players[i]
             if pl.alive == True:
                 send_all(players[i][1] + ' won!')
+                send_all("Correct answer is: " + ', '.join(GAME.killed()))
                 break
         end()
 
@@ -244,11 +245,15 @@ def accuse(message):
 @bot.message_handler(commands=['finish'])
 def nextTurn(message=None):
     global CHOOSING_NOW, HAS_ASKED
-    if message is None or CHOOSING_NOW != d[message.chat.id]:
+    if message is None:
+        return
+    if CHOOSING_NOW != d[message.chat.id]:
         bot.send_message(message.chat.id, "Not your turn!")
         return
     HAS_ASKED = False
     CHOOSING_NOW = (CHOOSING_NOW + 1) % COUNT
+    while not GAME.players[CHOOSING_NOW].alive:
+        CHOOSING_NOW = (CHOOSING_NOW + 1) % COUNT
     send_turn()
 
 

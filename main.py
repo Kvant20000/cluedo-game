@@ -84,7 +84,7 @@ def go(index):
         send_all('Nobody can help!')
     else:
         bot.send_message(players[index][0], my_ans + ' from ' + players[man][1])
-        send_all('Answered by ' + players[man][1], [players[man]])
+        send_all('Answered by ' + players[man][1], [players[index]])
 
 
 def answer(man):
@@ -95,7 +95,7 @@ def answer(man):
     now = set(now_chosen)
     inter = now.intersection(cards)
 
-    print(inter)
+    #print(inter)
 
     if len(now.intersection(cards)) == 0:
         bot.send_message(id, "Choose answer: ", reply_markup=make(['NO']))

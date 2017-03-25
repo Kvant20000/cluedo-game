@@ -152,13 +152,18 @@ def start_game(message):
 
 def make(arr):
     now = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
-    now.row(telebot.types.KeyboardButton(arr[0]), telebot.types.KeyboardButton(arr[1]),
-            telebot.types.KeyboardButton(arr[2]))
-    now.row(telebot.types.KeyboardButton(arr[3]), telebot.types.KeyboardButton(arr[4]),
-            telebot.types.KeyboardButton(arr[5]))
-    if len(arr) == 9:
-        now.row(telebot.types.KeyboardButton(arr[6]), telebot.types.KeyboardButton(arr[7]),
-                telebot.types.KeyboardButton(arr[8]))
+    if len(arr) == 1:
+        now.row(telebot.types.KeyboardButton(arr[0]))
+    elif len(arr) == 2:
+        now.row(telebot.types.KeyboardButton(arr[0]), telebot.types.KeyboardButton(arr[1]))
+    else:
+        now.row(telebot.types.KeyboardButton(arr[0]), telebot.types.KeyboardButton(arr[1]),
+                telebot.types.KeyboardButton(arr[2]))
+        now.row(telebot.types.KeyboardButton(arr[3]), telebot.types.KeyboardButton(arr[4]),
+                telebot.types.KeyboardButton(arr[5]))
+        if len(arr) == 9:
+            now.row(telebot.types.KeyboardButton(arr[6]), telebot.types.KeyboardButton(arr[7]),
+                    telebot.types.KeyboardButton(arr[8]))
     return now
 
 

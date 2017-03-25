@@ -55,7 +55,41 @@ d = dict()
 active = []
 
 bot = telebot.TeleBot(TOKEN)
+my_ans = ''
 
+def go(index):
+    global my_ans
+    my_ans = ''
+    man = (index + 1) % len(GAME.players)
+    while answer(man) and man != index:
+        man = (man + 1) % len(GAME.players)
+    if man == index:
+        send_all('Nobody can help!!!')
+    else:
+        bot.send_message(players[index][0], my_ans + ' from ' + players[man][1])
+        send_all('Answered by ' + players[man][1])
+    
+    
+def answer(man):
+    global my_ans
+    id = players[man][0]
+    Pl = GAME.players[man]
+    cards = set(Pl.cards)
+    now = set(now_chosen)
+    inter = now.intersection(cards)
+    
+    print(inter)
+    
+    if len(now.intersection(cards)) == 0:
+        bot.send_message(id, "Choose answer: ", reply_markup = make(['NO']))
+        while len(my_ans) == 0:
+            pass
+        return False
+    else:
+        bot.send_message(id, "Choose answer: ", reply_markup = make(list(inter)))
+        while len(my_ans) == 0:
+            pass
+        return True
 
 @bot.message_handler(commands=['play'])
 def get_players(message):
@@ -91,8 +125,8 @@ def start_game(message):
         for player in players:
             msg = bot.send_message(player[0], GAME.cards(d[player[0]]))
         print(d, active)
-
-
+       
+        
 def make(arr):
     now = telebot.types.ReplyKeyboardMarkup(one_time_keyboard = True)
     for elem in arr:
@@ -114,6 +148,7 @@ def ask(message):
     while len(now_chosen) != 3:
         pass
     bot.send_message(message.chat.id, "Your choise is: " + ', '.join(now_chosen))
+    go(d[message.chat.id])
 
 
 @bot.message_handler(commands=['accuse'])
@@ -140,7 +175,10 @@ def accuse(message):
 
 @bot.message_handler()
 def tmp(message):
-    global now_chosen
+    global now_chosen, my_ans
+    if message.text in now_chosen or message.text == 'NO':
+        my_ans = message.text
+        
     if message.text in people + weapons + places:
         now_chosen += [message.text]
     return

@@ -8,6 +8,7 @@ import datetime
 import random as rd
 
 TOKEN = "303602093:AAGz6ihk895s3K07vYqc6eBY8InFwX4YuhQ"
+TOKEN2 = "314275855:AAEA4Z-sF5E213qVm38VE2CJ8d8dVV6dZCg"
 
 am_open = [0, 0, 0, 0, 2, 3, 0]  # other option is [0, 0, 0, 6, 6, 3, 6]
 people = ["Ворона", "Берёза", "Князь Пожарский", "Васечка", "Афганский мафиози", "СВ"]  # КТО?
@@ -173,6 +174,13 @@ def ask(message):
     go(d[message.chat.id])
     CHOOSING_NOW = False
 
+@bot.message_handler(commands = ['help'])
+def helpMessege(message):
+    '/help - see this messege again'
+    '/play - join to unstarted game'
+    '/game - start new game with conected players'
+    '/ask - ask one CLUEDO question'
+    '/accuse - make accuse'
 
 @bot.message_handler(commands=['accuse'])
 def accuse(message):

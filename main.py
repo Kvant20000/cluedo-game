@@ -38,8 +38,8 @@ class Game:
         am_per_player = (len(deck) - am_open[n]) // n
         self.players = [Player(deck[i: i + am_per_player]) for i in range(am_open[n], len(deck), am_per_player)]
 
-    def kill(self):
-        return self.ans()
+    def killed(self):
+        return self.ans
 
     def cards(self, person):
         s = "Открытые карты: " + ', '.join(self.opencrds) + '\n'
@@ -51,6 +51,8 @@ players = []
 now_chosen = []
 FINISHED = False
 GAME = None
+d = dict()
+active = []
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -62,9 +64,9 @@ def get_players(message):
     user = message.chat.username
     if len(players) > 5 and FINISHED:
         msg = bot.send_message(message.chat.id, "Sorry, no empty places!")
-    if (Id, user) not in players:
+    elif (Id, user) not in players:
         players.append((Id, user))
-    msg = bot.send_message(message.chat.id, "Welcome to the game, {0}!".format(user))
+        msg = bot.send_message(message.chat.id, "Welcome to the game, {0}!".format(user))
     print(players)
 
 
@@ -72,20 +74,23 @@ def get_players(message):
 def start_game(message):
     global FINISHED
     global GAME
+    global d
+    global active
     if FINISHED:
         msg = bot.send_message(message.chat.id, "Game has already started")
     else:
+        active = [True] * len(players)
         FINISHED = True
         print(players)
         GAME = Game(len(players))
         rd.shuffle(players)
-        d = dict()
         place = 0
         for elem in players:
             d[elem[0]] = place
             place += 1
         for player in players:
             msg = bot.send_message(player[0], GAME.cards(d[player[0]]))
+        print(d, active)
 
 
 def make(arr):
@@ -111,12 +116,44 @@ def ask(message):
     bot.send_message(message.chat.id, "Your choise is: " + ', '.join(now_chosen))
 
 
+@bot.message_handler(commands=['accuse'])
+def accuse(message):
+    print("WAAAT?")
+    global now_chosen
+    global active
+    now_chosen = []
+    bot.send_message(message.chat.id, "Choose person: ", reply_markup=make(people))
+    while len(now_chosen) != 1:
+        pass
+    bot.send_message(message.chat.id, "Choose weapon: ", reply_markup=make(weapons))
+    while len(now_chosen) != 2:
+        pass
+    bot.send_message(message.chat.id, "Choose place: ", reply_markup=make(places))
+    while len(now_chosen) != 3:
+        pass
+    if check_ans(now_chosen):
+        send_all(players[d[message.chat.id]][1] + " won!")
+    else:
+        active[d[message.chat.id]] = False
+        send_all(players[d[message.chat.id]][1] + " didn't guess correct! He's out of game!")
+
+
 @bot.message_handler()
 def tmp(message):
     global now_chosen
     if message.text in people + weapons + places:
         now_chosen += [message.text]
+    return
 
+
+def check_ans(arr):
+    return sorted(GAME.killed()) == sorted(arr)
+
+
+def send_all(msg):
+    for player in players:
+        bot.send_message(player[0], msg)
+    return
 
 
 bot.polling()

@@ -22,6 +22,7 @@ NUMBER_OF_PEOPLE = 0
 COUNT = 0
 HAS_ASKED = False
 
+
 class Player:
     def __init__(self, A):
         self.cards = A
@@ -70,7 +71,7 @@ my_ans = ''
 
 # @bot.message_handler()
 # def trash(message):
-    # print(message.text)
+# print(message.text)
 
 def go(index):
     global my_ans
@@ -83,7 +84,7 @@ def go(index):
         send_all('Nobody can help!')
     else:
         bot.send_message(players[index][0], my_ans + ' from ' + players[man][1])
-        send_all('Answered by ' + players[man][1])
+        send_all('Answered by ' + players[man][1], [players[man]])
 
 
 def answer(man):
@@ -107,7 +108,6 @@ def answer(man):
         while len(my_ans) == 0:
             pass
         return True
-
 
 
 @bot.message_handler(commands=['play'])
@@ -148,7 +148,7 @@ def start_game(message):
             msg = bot.send_message(player[0], GAME.cards(d[player[0]]))
         print(d, active)
         send_turn()
-        
+
 
 def make(arr):
     now = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
@@ -162,14 +162,14 @@ def ask(message):
     global now_chosen
     global CHOOSING_NOW
     global HAS_ASKED
-    
+
     if CHOOSING_NOW != d[message.chat.id]:
         bot.send_message(message.chat.id, "Not your turn!")
         return
     if HAS_ASKED == True:
         bot.send_message(message.chat.id, "You have already asked")
         return
-        
+
     HAS_ASKED = True
     now_chosen = []
     if not GAME.players[d[message.chat.id]].alive:
@@ -185,15 +185,15 @@ def ask(message):
     while len(now_chosen) != 3:
         pass
     bot.send_message(message.chat.id, "Your choice is: " + ', '.join(now_chosen))
-    send_all(players[d[message.chat.id]][1] + " asks: " + ', '.join(now_chosen))
+    send_all(players[d[message.chat.id]][1] + " asks: " + ', '.join(now_chosen), [players[d[message.chat.id]]])
     go(d[message.chat.id])
 
-    
-@bot.message_handler(commands = ['help'])
+
+@bot.message_handler(commands=['help'])
 def helpMessege(message):
     text = '/help - see this message again' + '\n' + '/play - join unstarted game' + '\n' + '/game - start new game with conected players' + '\n' + '/ask - ask one CLUEDO question' + '\n' + '/accuse - make accusation' + '\n' + '/finish - end of your turn'
     bot.send_message(message.chat.id, text)
-    
+
 
 @bot.message_handler(commands=['accuse'])
 def accuse(message):
@@ -201,9 +201,9 @@ def accuse(message):
     global active
     global GAME
     global CHOOSING_NOW
-    global NUMBER_OF_PEOPLE     
+    global NUMBER_OF_PEOPLE
     global HAS_ASKED
-    
+
     if CHOOSING_NOW != d[message.chat.id]:
         bot.send_message(message.chat.id, "Not your turn!")
         return
@@ -222,6 +222,7 @@ def accuse(message):
         pass
     if check_ans(now_chosen):
         send_all(players[d[message.chat.id]][1] + " won!")
+        send_all("Correct answer is: " + ', '.join(GAME.killed()))
         end()
     else:
         GAME.players[d[message.chat.id]].alive = False
@@ -230,7 +231,7 @@ def accuse(message):
         send_all(players[d[message.chat.id]][1] + " didn't guess correctly! He's out of the game!")
         bot.send_message(message.chat.id, "Correct answer is: " + ', '.join(GAME.killed()))
         nextTurn()
-    
+
     if NUMBER_OF_PEOPLE == 1:
         for i in range(len(GAME.players)):
             pl = GAME.players[i]
@@ -238,10 +239,14 @@ def accuse(message):
                 send_all(players[i][1] + ' won!')
                 break
         end()
-                
-@bot.message_handler(commands = ['finish'])
-def nextTurn(message = None):
+
+
+@bot.message_handler(commands=['finish'])
+def nextTurn(message=None):
     global CHOOSING_NOW, HAS_ASKED
+    if message is None or CHOOSING_NOW != d[message.chat.id]:
+        bot.send_message(message.chat.id, "Not your turn!")
+        return
     HAS_ASKED = False
     CHOOSING_NOW = (CHOOSING_NOW + 1) % COUNT
     send_turn()
@@ -260,20 +265,23 @@ def tmp(message):
 
 def end():
     exit(0)
-    
+
+
 def check_ans(arr):
     return sorted(GAME.killed()) == sorted(arr)
 
 
-def send_all(msg):
+def send_all(msg, bad = []):
     for player in players:
-        bot.send_message(player[0], msg)
+        if player not in bad:
+            bot.send_message(player[0], msg)
     return
+
 
 def send_turn():
     for player in players:
         bot.send_message(player[0], "Now it's " + players[CHOOSING_NOW][1] + "'s turn")
-    return 
-    
-    
+    return
+
+
 bot.polling()

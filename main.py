@@ -279,8 +279,18 @@ def tmp(message):
 
 
 def end():
-    exit(0)
-
+    global FINISHED, players, now_chosen, GAME, d, active, my_ans, CHOOSING_NOW, NUMBER_OF_PEOPLE, COUNT, HAS_ASKED
+    FINISHED = False
+    players = []
+    now_chosen = []
+    GAME = None
+    d = dict()
+    active = []
+    my_ans = ''
+    CHOOSING_NOW = 0
+    NUMBER_OF_PEOPLE = 0
+    COUNT = 0
+    HAS_ASKED = False
 
 def check_ans(arr):
     return sorted(GAME.killed()) == sorted(arr)

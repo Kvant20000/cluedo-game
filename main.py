@@ -73,6 +73,12 @@ my_ans = ''
 #def trash(message):
 #    print(message.text)
 
+def playersToString(names):
+    ans = ''
+    for elem in names:
+        ans += elem[1] + '\n'
+    return ans
+
 def go(index):
     global my_ans
     my_ans = ''
@@ -124,6 +130,7 @@ def get_players(message):
         players.append((Id, user))
         msg = bot.send_message(message.chat.id, "Welcome to the game, {0}!".format(user))
     print(players)
+    send_all(playersToString(players))
 
 
 @bot.message_handler(commands=['game'])
@@ -290,6 +297,7 @@ def tmp(message):
 
     if message.text in people + weapons + places:
         now_chosen += [message.text]
+        
     return
 
 

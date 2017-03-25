@@ -71,7 +71,7 @@ my_ans = ''
 
 #@bot.message_handler()
 #def trash(message):
-#   print(message.text)
+#    print(message.text)
 
 def go(index):
     global my_ans
@@ -152,8 +152,13 @@ def start_game(message):
 
 def make(arr):
     now = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
-    for elem in arr:
-        now.add(telebot.types.KeyboardButton(elem))
+    now.row(telebot.types.KeyboardButton(arr[0]), telebot.types.KeyboardButton(arr[1]),
+            telebot.types.KeyboardButton(arr[2]))
+    now.row(telebot.types.KeyboardButton(arr[3]), telebot.types.KeyboardButton(arr[4]),
+            telebot.types.KeyboardButton(arr[5]))
+    if len(arr) == 9:
+        now.row(telebot.types.KeyboardButton(arr[6]), telebot.types.KeyboardButton(arr[7]),
+                telebot.types.KeyboardButton(arr[8]))
     return now
 
 
@@ -237,7 +242,7 @@ def accuse(message):
             pl = GAME.players[i]
             if pl.alive == True:
                 send_all(players[i][1] + ' won!')
-                send_all("Correct answer is: " + ', '.join(GAME.killed()))
+                bot.send_message(players[i][0], "Correct answer is: " + ', '.join(GAME.killed()))
                 break
         end()
 

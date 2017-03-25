@@ -101,7 +101,7 @@ def answer(man):
         bot.send_message(id, "Choose answer: ", reply_markup=make(['NO']))
         while len(my_ans) == 0:
             pass
-        send_all(players[man][1] + " answered 'NO'")
+        send_all(players[man][1] + " answered 'NO'", [players[man]])
         return False
     else:
         bot.send_message(id, "Choose answer: ", reply_markup=make(list(inter)))

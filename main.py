@@ -18,7 +18,7 @@ places = ["в 209", "у психолога", "в Маке", "на футболь
           "у выхода из метро", "в офисе 1С"]  # ГДЕ?
 
 CHOOSING_NOW = False
-
+NUMBER_OF_PEOPLE = 0
 
 class Player:
     def __init__(self, A):
@@ -31,6 +31,9 @@ class Player:
 
 class Game:
     def __init__(self, n):  # n players
+        global NUMBER_OF_PEOPLE
+        NUMBER_OF_PEOPLE = n
+        print(NUMBER_OF_PEOPLE)
         self.ans = (rd.choice(people), rd.choice(weapons), rd.choice(places))  # the answer
 
         deck = people + weapons + places
@@ -61,6 +64,10 @@ active = []
 bot = telebot.TeleBot(TOKEN)
 my_ans = ''
 
+
+# @bot.message_handler()
+# def trash(message):
+    # print(message.text)
 
 def go(index):
     global my_ans
@@ -100,6 +107,7 @@ def answer(man):
         while len(my_ans) == 0:
             pass
         return True
+
 
 
 @bot.message_handler(commands=['play'])
@@ -176,11 +184,9 @@ def ask(message):
 
 @bot.message_handler(commands = ['help'])
 def helpMessege(message):
-    '/help - see this messege again'
-    '/play - join to unstarted game'
-    '/game - start new game with conected players'
-    '/ask - ask one CLUEDO question'
-    '/accuse - make accuse'
+    text = '/help - see this message again' + '\n' + '/play - join unstarted game' + '\n' + '/game - start new game with conected players' + '\n' + '/ask - ask one CLUEDO question' + '\n' + '/accuse - make accusation'
+    bot.send_message(message.chat.id, text)
+    
 
 @bot.message_handler(commands=['accuse'])
 def accuse(message):
@@ -188,6 +194,8 @@ def accuse(message):
     global active
     global GAME
     global CHOOSING_NOW
+    global NUMBER_OF_PEOPLE
+    
     if CHOOSING_NOW:
         bot.send_message(message.chat.id, "Not your turn!")
         return
@@ -209,11 +217,17 @@ def accuse(message):
         send_all(players[d[message.chat.id]][1] + " won!")
     else:
         GAME.players[d[message.chat.id]].alive = False
+        NUMBER_OF_PEOPLE -= 1
         send_all(players[d[message.chat.id]][1] + " has accused: " + ', '.join(now_chosen))
         send_all(players[d[message.chat.id]][1] + " didn't guess correctly! He's out of the game!")
         bot.send_message(message.chat.id, "Correct answer is: " + ', '.join(GAME.killed()))
     CHOOSING_NOW = False
-
+    if NUMBER_OF_PEOPLE == 1:
+        for i in range(len(GAME.players)):
+            pl = GAME.players[i]
+            if pl.alive == True:
+                send_all(players[i][1] + ' won!')
+                break
 
 @bot.message_handler()
 def tmp(message):

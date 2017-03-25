@@ -163,7 +163,7 @@ def make(arr):
         now.row(telebot.types.KeyboardButton(arr[0]))
     elif len(arr) == 2:
         now.row(telebot.types.KeyboardButton(arr[0]), telebot.types.KeyboardButton(arr[1]))
-    else:
+    elif len(arr) > 2:
         now.row(telebot.types.KeyboardButton(arr[0]), telebot.types.KeyboardButton(arr[1]),
                 telebot.types.KeyboardButton(arr[2]))
         now.row(telebot.types.KeyboardButton(arr[3]), telebot.types.KeyboardButton(arr[4]),
@@ -288,7 +288,16 @@ def nextTurn(message=None):
         CHOOSING_NOW = (CHOOSING_NOW + 1) % COUNT
     send_turn()
 
+@bot.message_handler(commands=['end'])
+def gemeEnd(message):
+    send_all('This game ends, new can start')
+    end()
 
+@bot.message_handler(commands=['full_end'])
+def botEnd(message):
+    send_all('This game and current session ends')
+    exit(0)
+    
 @bot.message_handler()
 def tmp(message):
     global now_chosen, my_ans

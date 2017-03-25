@@ -4,6 +4,7 @@ import logging
 import colorlog
 import emoji
 import time
+import sys
 import datetime
 import random as rd
 
@@ -296,6 +297,8 @@ def gemeEnd(message):
 @bot.message_handler(commands=['full_end'])
 def botEnd(message):
     send_all('This game and current session ends')
+    time.sleep(10)
+    print('full end')
     exit(0)
     
 @bot.message_handler()

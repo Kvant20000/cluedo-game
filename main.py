@@ -16,6 +16,8 @@ weapons = ["Тихим Доном", "клавиатурой", "выносом м
 places = ["в 209", "у психолога", "в Маке", "на футбольном поле", "в электричке", "в актовом зале", "в ТЦ Охотный",
           "у выхода из метро", "в офисе 1С"]  # ГДЕ?
 
+CHOOSING_NOW = False
+
 
 class Player:
     def __init__(self, A):
@@ -148,6 +150,11 @@ def make(arr):
 @bot.message_handler(commands=['ask'])
 def ask(message):
     global now_chosen
+    global CHOOSING_NOW
+    if CHOOSING_NOW:
+        bot.send_message(message.chat.id, "Not your turn!")
+        return
+    CHOOSING_NOW = True
     now_chosen = []
     if not GAME.players[d[message.chat.id]].alive:
         bot.send_message(message.chat.id, "You are dead!")
@@ -164,6 +171,7 @@ def ask(message):
     bot.send_message(message.chat.id, "Your choice is: " + ', '.join(now_chosen))
     send_all(players[d[message.chat.id]][1] + " asks: " + ', '.join(now_chosen))
     go(d[message.chat.id])
+    CHOOSING_NOW = False
 
 
 @bot.message_handler(commands=['accuse'])
@@ -171,6 +179,11 @@ def accuse(message):
     global now_chosen
     global active
     global GAME
+    global CHOOSING_NOW
+    if CHOOSING_NOW:
+        bot.send_message(message.chat.id, "Not your turn!")
+        return
+    CHOOSING_NOW = True
     if not GAME.players[d[message.chat.id]].alive:
         bot.send_message(message.chat.id, "You are dead!")
         return
@@ -191,6 +204,7 @@ def accuse(message):
         send_all(players[d[message.chat.id]][1] + " has accused: " + ', '.join(now_chosen))
         send_all(players[d[message.chat.id]][1] + " didn't guess correctly! He's out of the game!")
         bot.send_message(message.chat.id, "Correct answer is: " + ', '.join(GAME.killed()))
+    CHOOSING_NOW = False
 
 
 @bot.message_handler()

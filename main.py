@@ -199,11 +199,26 @@ def ask(message):
     go(d[message.chat.id])
 
 
-@bot.message_handler(commands=['help'])
+@bot.message_handler(commands=['help', 'start'])
 def helpMessege(message):
-    text = '/help - see this message again' + '\n' + '/play - join unstarted game' + '\n' + '/game - start new game with conected players' + '\n' + '/ask - ask one CLUEDO question' + '\n' + '/accuse - make accusation' + '\n' + '/finish - end of your turn'
+    text = ('/help - see this message again' + '\n' + 
+            '/play - join unstarted game' + '\n' + 
+            '/game - start new game with conected players' + '\n' + 
+            '/ask - ask one CLUEDO question' + '\n' + 
+            '/accuse - make accusation' + '\n' + 
+            '/finish - end of your turn' + '\n' + 
+            '/how_use - how use this bot')
     bot.send_message(message.chat.id, text)
 
+@bot.message_handler(commands=['how_use'])
+def use(message):
+    id = message.chat.id
+    text = ('если ты хочешь изъявить желане играть, то напиши команду /play' + '\n' +
+            'чтобы начать игру с другими подключенными игроками напиши /game' + '\n' +
+            'для отправки вопроса команда /ask' + '\n' +
+            'после надо или обвинять /accuse или закончить ход /finish' + '\n' +
+            'ход перейдет к следующему игроку' + '\n')
+    bot.send_message(id, text)
 
 @bot.message_handler(commands=['accuse'])
 def accuse(message):

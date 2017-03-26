@@ -71,9 +71,9 @@ bot = telebot.TeleBot(TOKEN)
 my_ans = ''
 
 
-@bot.message_handler()
-def trash(message):
-    print(message.text)
+#@bot.message_handler()
+#def trash(message):
+#    print(message.text)
 
 def playersToString(names):
     ans = ''

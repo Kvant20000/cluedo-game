@@ -75,6 +75,7 @@ my_ans = ''
 #def trash(message):
 #    print(message.text)
 
+
 def playersToString(names):
     ans = ''
     for elem in names:
@@ -135,7 +136,7 @@ def get_players(message):
         players.append((Id, user))
         msg = bot.send_message(message.chat.id, "Welcome to the game, {0}!".format(user))
     print(players)
-    if len(players) != len(now_plays):
+    if len(players) == len(now_plays) + 1:
         send_all(playersToString(players))
 
 
@@ -161,10 +162,9 @@ def start_game(message):
             cards = GAME.cards(d[player[0]])
             bot.send_message(player[0], cards[0])
             bot.send_message(player[0], cards[1])
-        #print(d, active)
-        #print(GAME.killed())
+        print(d, active)
+        print(GAME.killed())
         send_turn()
-        
 
 
 def make(arr):
@@ -186,16 +186,14 @@ def make(arr):
 
 @bot.message_handler(commands=['ask'])
 def ask(message):
-    global now_chosen
-    global CHOOSING_NOW
-    global HAS_ASKED
+    global FINISHED, players, now_chosen, GAME, d, active, my_ans, CHOOSING_NOW, NUMBER_OF_PEOPLE, COUNT, HAS_ASKED
 
     if not FINISHED:
         return
     if CHOOSING_NOW != d[message.chat.id]:
         bot.send_message(message.chat.id, "Not your turn!")
         return
-    if HAS_ASKED == True:
+    if HAS_ASKED:
         bot.send_message(message.chat.id, "You have already asked")
         return
 
@@ -217,17 +215,87 @@ def ask(message):
     send_all(players[d[message.chat.id]][1] + " asks: " + ', '.join(now_chosen), [players[d[message.chat.id]]])
     go(d[message.chat.id])
 
+    my_ans = ''
+    bot.send_message(message.chat.id, "Do you want to accuse?", reply_markup=make(["YES", "NO"]))
+    while my_ans == '':
+        pass
+    if my_ans == "YES":
+        if not FINISHED:
+            return
+        if CHOOSING_NOW != d[message.chat.id]:
+            bot.send_message(message.chat.id, "Not your turn!")
+            return
+        if not GAME.players[d[message.chat.id]].alive:
+            bot.send_message(message.chat.id, "You are dead!")
+            return
+        now_chosen = []
+        bot.send_message(message.chat.id, "Choose person: ", reply_markup=make(people))
+        while len(now_chosen) != 1:
+            pass
+        bot.send_message(message.chat.id, "Choose weapon: ", reply_markup=make(weapons))
+        while len(now_chosen) != 2:
+            pass
+        bot.send_message(message.chat.id, "Choose place: ", reply_markup=make(places))
+        while len(now_chosen) != 3:
+            pass
+        if check_ans(now_chosen):
+            send_all(players[d[message.chat.id]][1] + " won!")
+            send_all("Correct answer is: " + ', '.join(GAME.killed()))
+            end()
+        else:
+            GAME.players[d[message.chat.id]].alive = False
+            NUMBER_OF_PEOPLE -= 1
+            send_all(players[d[message.chat.id]][1] + " has accused: " + ', '.join(now_chosen))
+            send_all(players[d[message.chat.id]][1] + " didn't guess correctly! He's out of the game!")
+            bot.send_message(message.chat.id, "Correct answer is: " + ', '.join(GAME.killed()))
+            if not FINISHED:
+                return
+            if message is None:
+                return
+            if CHOOSING_NOW != d[message.chat.id]:
+                bot.send_message(message.chat.id, "Not your turn!")
+                return
+            HAS_ASKED = False
+            CHOOSING_NOW = (CHOOSING_NOW + 1) % COUNT
+            while not GAME.players[CHOOSING_NOW].alive:
+                CHOOSING_NOW = (CHOOSING_NOW + 1) % COUNT
+            send_turn()
+            end()
+
+        if NUMBER_OF_PEOPLE == 1:
+            for i in range(len(GAME.players)):
+                pl = GAME.players[i]
+                if pl.alive == True:
+                    send_all(players[i][1] + ' won!')
+                    bot.send_message(players[i][0], "Correct answer is: " + ', '.join(GAME.killed()))
+                    break
+            end()
+    else:
+        if not FINISHED:
+            return
+        if message is None:
+            return
+        if CHOOSING_NOW != d[message.chat.id]:
+            bot.send_message(message.chat.id, "Not your turn!")
+            return
+        HAS_ASKED = False
+        CHOOSING_NOW = (CHOOSING_NOW + 1) % COUNT
+        while not GAME.players[CHOOSING_NOW].alive:
+            CHOOSING_NOW = (CHOOSING_NOW + 1) % COUNT
+        send_turn()
+
 
 @bot.message_handler(commands=['help', 'start'])
 def helpMessege(message):
-    text = ('/help - see this message again' + '\n' + 
-            '/play - join unstarted game' + '\n' + 
-            '/game - start new game with conected players' + '\n' + 
-            '/ask - ask one CLUEDO question' + '\n' + 
-            '/accuse - make accusation' + '\n' + 
-            '/finish - end of your turn' + '\n' + 
+    text = ('/help - see this message again' + '\n' +
+            '/play - join unstarted game' + '\n' +
+            '/game - start new game with conected players' + '\n' +
+            '/ask - ask one CLUEDO question' + '\n' +
+            '/accuse - make accusation' + '\n' +
+            '/finish - end of your turn' + '\n' +
             '/how_use - how use this bot')
     bot.send_message(message.chat.id, text)
+
 
 @bot.message_handler(commands=['how_use'])
 def use(message):
@@ -239,77 +307,12 @@ def use(message):
             'ход перейдет к следующему игроку' + '\n')
     bot.send_message(id, text)
 
-@bot.message_handler(commands=['accuse'])
-def accuse(message):
-    global now_chosen
-    global active
-    global GAME
-    global CHOOSING_NOW
-    global NUMBER_OF_PEOPLE
-    global HAS_ASKED
-
-    if not FINISHED:
-        return
-    if CHOOSING_NOW != d[message.chat.id]:
-        bot.send_message(message.chat.id, "Not your turn!")
-        return
-    if not GAME.players[d[message.chat.id]].alive:
-        bot.send_message(message.chat.id, "You are dead!")
-        return
-    now_chosen = []
-    bot.send_message(message.chat.id, "Choose person: ", reply_markup=make(people))
-    while len(now_chosen) != 1:
-        pass
-    bot.send_message(message.chat.id, "Choose weapon: ", reply_markup=make(weapons))
-    while len(now_chosen) != 2:
-        pass
-    bot.send_message(message.chat.id, "Choose place: ", reply_markup=make(places))
-    while len(now_chosen) != 3:
-        pass
-    if check_ans(now_chosen):
-        send_all(players[d[message.chat.id]][1] + " won!")
-        send_all("Correct answer is: " + ', '.join(GAME.killed()))
-        end()
-    else:
-        GAME.players[d[message.chat.id]].alive = False
-        NUMBER_OF_PEOPLE -= 1
-        send_all(players[d[message.chat.id]][1] + " has accused: " + ', '.join(now_chosen))
-        send_all(players[d[message.chat.id]][1] + " didn't guess correctly! He's out of the game!")
-        bot.send_message(message.chat.id, "Correct answer is: " + ', '.join(GAME.killed()))
-        nextTurn(message)
-        end()
-
-    if NUMBER_OF_PEOPLE == 1:
-        for i in range(len(GAME.players)):
-            pl = GAME.players[i]
-            if pl.alive == True:
-                send_all(players[i][1] + ' won!')
-                bot.send_message(players[i][0], "Correct answer is: " + ', '.join(GAME.killed()))
-                break
-        end()
-
-
-@bot.message_handler(commands=['finish'])
-def nextTurn(message=None):
-    global CHOOSING_NOW, HAS_ASKED
-
-    if not FINISHED:
-        return
-    if message is None:
-        return
-    if CHOOSING_NOW != d[message.chat.id]:
-        bot.send_message(message.chat.id, "Not your turn!")
-        return
-    HAS_ASKED = False
-    CHOOSING_NOW = (CHOOSING_NOW + 1) % COUNT
-    while not GAME.players[CHOOSING_NOW].alive:
-        CHOOSING_NOW = (CHOOSING_NOW + 1) % COUNT
-    send_turn()
 
 @bot.message_handler(commands=['end'])
 def gemeEnd(message):
     send_all('This game ends, new can start')
     end()
+
 
 @bot.message_handler(commands=['full_end'])
 def botEnd(message):
@@ -317,16 +320,17 @@ def botEnd(message):
     time.sleep(10)
     print('full end')
     exit(0)
-    
+
+
 @bot.message_handler()
 def tmp(message):
     global now_chosen, my_ans
-    if message.text in now_chosen or message.text == 'NO':
+    if message.text in now_chosen or message.text == 'NO' or message.text == "YES":
         my_ans = message.text
 
     if message.text in people + weapons + places:
         now_chosen += [message.text]
-        
+
     return
 
 
@@ -344,11 +348,12 @@ def end():
     COUNT = 0
     HAS_ASKED = False
 
+
 def check_ans(arr):
     return sorted(GAME.killed()) == sorted(arr)
 
 
-def send_all(msg, bad = []):
+def send_all(msg, bad=[]):
     for player in players:
         if player not in bad:
             bot.send_message(player[0], msg)
@@ -361,4 +366,9 @@ def send_turn():
     return
 
 
-bot.polling()
+loggs = open("logs.txt", "w")
+try:
+    bot.polling()
+except Exception as err:
+    logging.write(err + "\n")
+loggs.close()

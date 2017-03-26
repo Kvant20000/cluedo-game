@@ -136,6 +136,7 @@ def get_players(message):
         players.append((Id, user))
         msg = bot.send_message(message.chat.id, "Welcome to the game, {0}!".format(user))
     print(players)
+    printLog(players)
     if len(players) == len(now_plays) + 1:
         send_all(playersToString(players))
 
@@ -164,10 +165,34 @@ def start_game(message):
             bot.send_message(player[0], cards[1])
         print(d, active)
         print(GAME.killed())
+        printLog(str(d))
+        printLog(str(active))
+        printLog(str(players))
+        printLog(str(GAME.killed))
         send_turn()
 
 
 def make(arr):
+    printLog('make(' + str(arr) + ')')
+    now = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
+    i = 0
+    while i + 3 <= len(arr):
+        now.row(telebot.types.KeyboardButton(arr[i + 0]), telebot.types.KeyboardButton(arr[i + 1]), telebot.types.KeyboardButton(arr[i + 2]))
+        i += 3
+    n = len(arr)
+    d = n - i
+    if d == 0:
+        return now
+    elif d == 1:
+        now.row(telebot.types.KeyboardButton(arr[i + 0]))
+        return now
+    elif d == 2:
+        now.row(telebot.types.KeyboardButton(arr[i + 0]), telebot.types.KeyboardButton(arr[i + 1]))
+        return now
+    printLog('Why i print it?')
+    
+
+def make2(arr):
     now = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
     if len(arr) == 1:
         now.row(telebot.types.KeyboardButton(arr[0]))
@@ -187,7 +212,13 @@ def make(arr):
 @bot.message_handler(commands=['ask'])
 def ask(message):
     global FINISHED, players, now_chosen, GAME, d, active, my_ans, CHOOSING_NOW, NUMBER_OF_PEOPLE, COUNT, HAS_ASKED
-
+    
+    printLog('person ' + str(message.chat.id) + 'asks')
+    
+    if GAME is None:
+        printLog('Game not started yet')
+        return
+    
     if not FINISHED:
         return
     if CHOOSING_NOW != d[message.chat.id]:
@@ -196,7 +227,7 @@ def ask(message):
     if HAS_ASKED:
         bot.send_message(message.chat.id, "You have already asked")
         return
-
+    printLog('trash question are ignored' + str(message.chat.id))
     HAS_ASKED = True
     now_chosen = []
     if not GAME.players[d[message.chat.id]].alive:
@@ -211,15 +242,17 @@ def ask(message):
     bot.send_message(message.chat.id, "Choose place: ", reply_markup=make(places))
     while len(now_chosen) != 3:
         pass
+    printLog('person has choosen  ' + ', '.join(now_chosen) + ' ' + str(message.chat.id))
     bot.send_message(message.chat.id, "Your choice is: " + ', '.join(now_chosen))
     send_all(players[d[message.chat.id]][1] + " asks: " + ', '.join(now_chosen), [players[d[message.chat.id]]])
     go(d[message.chat.id])
-
+    printLog('ask of wanting to accuse ' + str(message.chat.id))
     my_ans = ''
     bot.send_message(message.chat.id, "Do you want to accuse?", reply_markup=make(["YES", "NO"]))
     while my_ans == '':
         pass
     if my_ans == "YES":
+        printLog('want to accuse by ' + str(message.chat.id))
         if not FINISHED:
             return
         if CHOOSING_NOW != d[message.chat.id]:
@@ -229,6 +262,7 @@ def ask(message):
             bot.send_message(message.chat.id, "You are dead!")
             return
         now_chosen = []
+        printLog('person ' + str(message.chat.id) + ' choose')
         bot.send_message(message.chat.id, "Choose person: ", reply_markup=make(people))
         while len(now_chosen) != 1:
             pass
@@ -238,11 +272,14 @@ def ask(message):
         bot.send_message(message.chat.id, "Choose place: ", reply_markup=make(places))
         while len(now_chosen) != 3:
             pass
+        printLog('person ' + str(message.chat.id) + ' has choosen  ' + ', '.join(now_chosen))
         if check_ans(now_chosen):
+            printLog(str(message.chat.id) + " guess")
             send_all(players[d[message.chat.id]][1] + " won!")
             send_all("Correct answer is: " + ', '.join(GAME.killed()))
             end()
         else:
+            printLog(str(message.chat.id) + " didn't guess")
             GAME.players[d[message.chat.id]].alive = False
             NUMBER_OF_PEOPLE -= 1
             send_all(players[d[message.chat.id]][1] + " has accused: " + ', '.join(now_chosen))
@@ -271,6 +308,7 @@ def ask(message):
                     break
             end()
     else:
+        printLog(str(message.chat.id) + " didn't accuse")
         if not FINISHED:
             return
         if message is None:
@@ -287,6 +325,7 @@ def ask(message):
 
 @bot.message_handler(commands=['help', 'start'])
 def helpMessege(message):
+    printLog('help from ' + str(message.chat.id))
     text = ('/help - see this message again' + '\n' +
             '/play - join unstarted game' + '\n' +
             '/game - start new game with conected players' + '\n' +
@@ -297,6 +336,7 @@ def helpMessege(message):
 
 @bot.message_handler(commands=['how_use'])
 def use(message):
+    printLog('how use from ' + str(message.chat.id))
     id = message.chat.id
     text = ('если ты хочешь изъявить желане играть, то напиши команду /play' + '\n' +
             'чтобы начать игру с другими подключенными игроками напиши /game' + '\n' +
@@ -314,6 +354,7 @@ def gemeEnd(message):
 
 @bot.message_handler(commands=['full_end'])
 def botEnd(message):
+    printLog('end of bot')
     send_all('This game and current session ends')
     time.sleep(10)
     print('full end')
@@ -334,6 +375,7 @@ def tmp(message):
 
 def end():
     global FINISHED, players, now_chosen, GAME, d, active, my_ans, CHOOSING_NOW, NUMBER_OF_PEOPLE, COUNT, HAS_ASKED
+    printLog('end of game')
     FINISHED = False
     players = []
     now_chosen = []
@@ -345,6 +387,8 @@ def end():
     NUMBER_OF_PEOPLE = 0
     COUNT = 0
     HAS_ASKED = False
+    
+    
 
 
 def check_ans(arr):
@@ -363,10 +407,18 @@ def send_turn():
         bot.send_message(player[0], "Now it's " + players[CHOOSING_NOW][1] + "'s turn")
     return
 
+def printLog(text):
+    global file_name
+    logs = open(file_name, "a")
+    logs.write(str(text) + '\n\n')
+    logs.close()
+    
+    
+file_name = "logs" + str(time.time()) + ".txt"
+loggs = open(file_name, "w")
+loggs.close()
 
-loggs = open("logs.txt", "w")
 try:
     bot.polling()
 except Exception as err:
-    logging.write(err + "\n")
-loggs.close()
+    printLog(str(err))

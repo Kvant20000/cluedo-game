@@ -91,7 +91,7 @@ def go(index):
         man = (man + 1) % COUNT
     if man == index:
         send_all('Nobody can help!')
-    else:COUN
+    else:
         bot.send_message(players[index][0], my_ans + ' from ' + players[man][1])
         send_all('Answered by ' + players[man][1], [players[index], players[man]])
 

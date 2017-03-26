@@ -22,6 +22,7 @@ CHOOSING_NOW = 0
 NUMBER_OF_PEOPLE = 0
 COUNT = 0
 HAS_ASKED = False
+MAX_PLAYERS = 6
 
 
 class Player:
@@ -54,8 +55,8 @@ class Game:
         return self.ans
 
     def cards(self, person):
-        s = "Открытые карты: " + ', '.join(self.opencrds) + '\n'
-        s += "Ваши карты: " + str(self.players[person]) + '\n'
+        s = ["Открытые карты: " + ', '.join(self.opencrds) + '\n']
+        s += ["Ваши карты: " + str(self.players[person]) + '\n']
         return s
 
 
@@ -80,6 +81,7 @@ def playersToString(names):
         ans += elem[1] + '\n'
     return ans
 
+
 def go(index):
     global my_ans
     my_ans = ''
@@ -91,7 +93,7 @@ def go(index):
         send_all('Nobody can help!')
     else:
         bot.send_message(players[index][0], my_ans + ' from ' + players[man][1])
-        send_all('Answered by ' + players[man][1], [players[man]])
+        send_all('Answered by ' + players[man][1], [players[index]])
 
 
 def answer(man):
@@ -104,7 +106,7 @@ def answer(man):
 
     print(inter)
 
-    if len(now.intersection(cards)) == 0:
+    if len(inter) == 0:
         bot.send_message(id, "Choose answer: ", reply_markup=make(['NO']))
         while len(my_ans) == 0:
             pass
@@ -125,7 +127,7 @@ def get_players(message):
     global players
     Id = message.chat.id
     user = message.chat.username
-    if len(players) > 5 and FINISHED:
+    if len(players) >= MAX_PLAYERS:
         msg = bot.send_message(message.chat.id, "Sorry, no empty places!")
     elif (Id, user) not in players:
         players.append((Id, user))
@@ -153,7 +155,9 @@ def start_game(message):
             d[elem[0]] = place
             place += 1
         for player in players:
-            msg = bot.send_message(player[0], GAME.cards(d[player[0]]))
+            cards = GAME.cards(d[player[0]])
+            bot.send_message(player[0], cards[0])
+            bot.send_message(player[0], cards[1])
         print(d, active)
         send_turn()
 
@@ -264,6 +268,7 @@ def accuse(message):
         send_all(players[d[message.chat.id]][1] + " didn't guess correctly! He's out of the game!")
         bot.send_message(message.chat.id, "Correct answer is: " + ', '.join(GAME.killed()))
         nextTurn(message)
+        end()
 
     if NUMBER_OF_PEOPLE == 1:
         for i in range(len(GAME.players)):

@@ -71,9 +71,9 @@ bot = telebot.TeleBot(TOKEN)
 my_ans = ''
 
 
-#@bot.message_handler()
-#def trash(message):
-#    print(message.text)
+@bot.message_handler()
+def trash(message):
+    print(message.text)
 
 def playersToString(names):
     ans = ''
@@ -91,9 +91,9 @@ def go(index):
         man = (man + 1) % COUNT
     if man == index:
         send_all('Nobody can help!')
-    else:
+    else:COUN
         bot.send_message(players[index][0], my_ans + ' from ' + players[man][1])
-        send_all('Answered by ' + players[man][1], [players[index]])
+        send_all('Answered by ' + players[man][1], [players[index], players[man]])
 
 
 def answer(man):

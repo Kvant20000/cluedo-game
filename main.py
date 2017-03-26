@@ -291,8 +291,6 @@ def helpMessege(message):
             '/play - join unstarted game' + '\n' +
             '/game - start new game with conected players' + '\n' +
             '/ask - ask one CLUEDO question' + '\n' +
-            '/accuse - make accusation' + '\n' +
-            '/finish - end of your turn' + '\n' +
             '/how_use - how use this bot')
     bot.send_message(message.chat.id, text)
 

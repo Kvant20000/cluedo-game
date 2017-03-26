@@ -161,8 +161,8 @@ def start_game(message):
             cards = GAME.cards(d[player[0]])
             bot.send_message(player[0], cards[0])
             bot.send_message(player[0], cards[1])
-        print(d, active)
-        print(GAME.killed())
+        #print(d, active)
+        #print(GAME.killed())
         send_turn()
         
 

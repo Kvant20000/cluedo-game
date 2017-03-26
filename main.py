@@ -127,13 +127,16 @@ def get_players(message):
     global players
     Id = message.chat.id
     user = message.chat.username
+    now_plays = players
     if len(players) >= MAX_PLAYERS:
         msg = bot.send_message(message.chat.id, "Sorry, no empty places!")
+        return
     elif (Id, user) not in players:
         players.append((Id, user))
         msg = bot.send_message(message.chat.id, "Welcome to the game, {0}!".format(user))
     print(players)
-    send_all(playersToString(players))
+    if len(players) != len(now_plays):
+        send_all(playersToString(players))
 
 
 @bot.message_handler(commands=['game'])
@@ -159,7 +162,9 @@ def start_game(message):
             bot.send_message(player[0], cards[0])
             bot.send_message(player[0], cards[1])
         print(d, active)
+        print(GAME.killed())
         send_turn()
+        
 
 
 def make(arr):
@@ -185,6 +190,8 @@ def ask(message):
     global CHOOSING_NOW
     global HAS_ASKED
 
+    if not FINISHED:
+        return
     if CHOOSING_NOW != d[message.chat.id]:
         bot.send_message(message.chat.id, "Not your turn!")
         return
@@ -241,6 +248,8 @@ def accuse(message):
     global NUMBER_OF_PEOPLE
     global HAS_ASKED
 
+    if not FINISHED:
+        return
     if CHOOSING_NOW != d[message.chat.id]:
         bot.send_message(message.chat.id, "Not your turn!")
         return
@@ -283,6 +292,9 @@ def accuse(message):
 @bot.message_handler(commands=['finish'])
 def nextTurn(message=None):
     global CHOOSING_NOW, HAS_ASKED
+
+    if not FINISHED:
+        return
     if message is None:
         return
     if CHOOSING_NOW != d[message.chat.id]:

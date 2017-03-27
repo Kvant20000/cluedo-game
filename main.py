@@ -127,7 +127,11 @@ def get_players(message):
         return
     global players
     Id = message.chat.id
-    user = str(message.chat.username)
+    user = message.chat.username
+    if user is None:
+        bot.send_message(message.chat.id, "Set your username and try again!")
+    else:
+        user = str(user)
     if len(players) >= MAX_PLAYERS:
         bot.send_message(message.chat.id, "Sorry, no empty places!")
         return
@@ -157,10 +161,13 @@ def start_game(message):
         for elem in players:
             d[elem[0]] = place
             place += 1
+        order = "Order of people: "
         for player in players:
             cards = GAME.cards(d[player[0]])
             bot.send_message(player[0], cards[0])
             bot.send_message(player[0], cards[1])
+            order += (player[1] + ', ')
+        send_all(order[:-2])
         print(d, active)
         print(GAME.killed())
         printLog(str(d))
@@ -357,6 +364,14 @@ def botEnd(message):
     time.sleep(10)
     print('full end')
     exit(0)
+
+
+@bot.message_handler(commands=['cards'])
+def show_cards(message):
+    cards = GAME.cards(d[message.chat.id])
+    bot.send_message(message.chat.id, cards[0])
+    bot.send_message(message.chat.id, cards[1])
+    printLog("Player {0} asked cards\n".format(players[d[message.chat.id]][1])) 
 
 
 @bot.message_handler()

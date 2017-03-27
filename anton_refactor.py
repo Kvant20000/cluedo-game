@@ -142,7 +142,7 @@ class Game:
             my_ans = ''
             return False
         if my_ans == 'Ваши карты':
-            bot.send_message(players[self.now].id, players[self.now].cardsInHand())
+            bot.send_message(players[self.now].id, players[self.now].knownCards())
             my_ans = ''
             
             keys = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
@@ -299,6 +299,7 @@ def start_game(message): #new
         
         GAME.game()
         gemeEnd()
+        
         
 @bot.message_handler(commands=['help', 'start'])
 def helpMessege(message): #should be remake

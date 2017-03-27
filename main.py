@@ -138,7 +138,7 @@ def get_players(message):
     elif (Id, user) not in players:
         players.append((Id, user))
         bot.send_message(message.chat.id, "Welcome to the game, {0}!".format(user))
-        send_all(playersToString(players))
+        send_all("Now in game: " + playersToString(players))
     print(players)
     printLog(players)
 

@@ -12,7 +12,7 @@ from copy import deepcopy
 TOKEN = "303602093:AAGz6ihk895s3K07vYqc6eBY8InFwX4YuhQ"
 TOKEN2 = "314275855:AAEA4Z-sF5E213qVm38VE2CJ8d8dVV6dZCg"
 
-Admin = telebot.types.User(id = 186898465, username = 'antonsa')
+Admin = telebot.types.User(id = 186898465, username = 'antonsa', first_name = 'Anton', last_name = 'Anikushin')
 
 am_open = [0, 0, 0, 0, 2, 3, 0]  # other option is [0, 0, 0, 6, 6, 3, 6]
 people = ["Ворона", "Берёза", "Князь Пожарский", "Васечка", "Афганский мафиози", "СВ"]  # КТО?
@@ -24,39 +24,48 @@ places = ["в 209", "у психолога", "в Маке", "на футболь
 
 
 class Player:
-    def __init__(self, cards = [], id = 186898465, username = 'antonsa', number = -1, first_name = 'anikushin anton', User = None):
+    def __init__(self, cards = [], id = 186898465, username = 'antonsa', number = -1, first_name = 'Anton', last_name = 'Anikushin', User = None):
         self.cards = deepcopy(cards)
         self.alive = True
         self.know = set(cards)
         self.number = number
         self.asked = False
+        self.user = User
         if User is None:
+            self.user = telebot.types.User(id = id, username = username, first_name = first_name)
             self.id = id
             self.username = username
             self.first_name = first_name
+            self.last_name = last_name
         else:
             self.id = User.id
             self.username = User.username
             self.first_name = User.first_name
+            self.last_name = User.last_name
         
         
     def __str__(self):
-        return ', '.join(self.cards)
+        return str(self.first_name) + ' ' + str(self.last_name) + '(' + str(self.username) + ')'
     
     def setUser(self, User):
+        self.user = User
         self.id = User.id
         self.username = User.username
         self.first_name = User.first_name
+        self.last_name = User.last_name
     
     def setNumber(self, num):
         self.number = num
     
     def setCards(self, cards):
         self.cards = deepcopy(cards)
-        self.know = deepcopy(cards)
+        self.know = set(cards)
     
     def addCards(self, card):
         self.know.add(card)
+    
+    def cardsInHand(self):
+        return ', '.join(self.cards) 
     
     def knownCards(self):
         return self.know
@@ -74,7 +83,9 @@ class Game:
         self.full = False
         self.max_players = 6
         self.ans = (rd.choice(people), rd.choice(weapons), rd.choice(places))  # the answer
-
+        self.won = False
+        self.now = 0
+        
         deck = people + weapons + places
         for i in self.ans:
             deck.remove(i)
@@ -82,7 +93,14 @@ class Game:
 
         self.open_cards = deck[:am_open[n]]
         am_per_player = (len(deck) - am_open[n]) // n
-        self.players = [Player(deck[i: i + am_per_player]) for i in range(am_open[n], len(deck), am_per_player)]
+        for i in range(n):
+            players[i].setCards(deck[am_open[n] + i * am_per_player: am_open[n] + i * am_per_player + am_per_player])
+    
+    def numberById(id):
+        for elem in players:
+            if elem.id == id:
+                return elem.number
+    
 
     def who_killed(self):
         return self.ans
@@ -91,7 +109,129 @@ class Game:
         s = 'Открытые карты: ' + ', '.join(self.opencrds)
         return s
     
+    def game():
+        global my_ans, now_chosen
+        send_all('Сейчас играют :\n' + playersList())
+        sendAdmin('Сейчас играют :\n' + playersList())
+        
+        while not self.won:
+            while not players[self.now].alive:
+                self.now += 1
+                
+            keys = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
+            keys.row(telebot.types.KeyboardButton('Ваши карты'))
+            keys.row(telebot.types.KeyboardButton('Спросить'), telebot.types.KeyboardButton('Обвинить'))
+            keys.row(telebot.types.KeyboardButton('Закончить'))
+            
+            send_turn(players[self.now])
+            bot.send_message('Выберите действие:', reply_markup=keys)
+            
+            while my_ans != '':
+                pass
+                
+            flag = self.turn()
+            if flag:
+                return
+            self.now += 1
+            
+             
+    def turn(self):
+        global my_ans
+        
+        if my_ans == 'Закончить':
+            my_ans = ''
+            return False
+        if my_ans == 'Ваши карты':
+            bot.send_message(players[self.now].id, players[self.now].cardsInHand())
+            my_ans = ''
+            
+            keys = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
+            keys.row(telebot.types.KeyboardButton('Спросить'), telebot.types.KeyboardButton('Обвинить'))
+            keys.row(telebot.types.KeyboardButton('Закончить'))
+            bot.send_message(players[self.now].id, 'Выберите действие:', reply_markup=keys)
+            while my_ans == '':
+                pass
+
+        if my_ans == 'Закончить':
+            my_ans = ''
+            return False
+        if my_ans == 'Спросить':
+            choice = self.ask()
+            bot.send_message(players[self.now].id, "Your choice is: " + ', '.join(choice))
+            send_all(str(players[self.now]) + " asks: " + ', '.join(now_chosen), [Pl])
+            go(self.now)
+            players[self.now].addCards(my_ans)
+
+            keys = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
+            keys.row(telebot.types.KeyboardButton('Обвинить'))
+            keys.row(telebot.types.KeyboardButton('Закончить'))
+            bot.send_message(players[self.now].id, 'Выберите действие:', reply_markup=keys)
+            while my_ans == '':
+                pass
+        
+        if my_ans == 'Закончить':
+            my_ans = ''
+           self.now += 1
+            return False
+        if my_ans == 'Обвинить'
+            choice = self.accuse()
+            bot.send_message(players[self.now].id, "Your choice is: " + ', '.join(choice))
+            
+            flag = self.checking(choice)
     
+    def checking(self, ans):
+        if check_ans(ans):
+            send_all(str(players[self.now]) + " won!")
+            send_all("Correct answer is: " + ', '.join(self.killed()), players[self.now])
+            return True
+        else:
+            players[self.now].alive = False
+            self.alive -= 1
+            send_all(str(players[self.now]) + " has accused: " + ', '.join(ans))
+            send_all(str(players[self.now]) + " didn't guess correctly! He's out of the game!")
+            bot.send_message(players[self.now].id, "Correct answer is: " + ', '.join(self.who_killed()))
+            
+            
+        if self.alive == 1:
+            for i in range(self.n):
+                pl = players[i]
+                if pl.alive == True:
+                    send_all(str(players[i]) + ' won!')
+                    bot.send_message(players[i].id, "Correct answer is: " + ', '.join(self.who_killed()))
+                    break
+            return True
+        return False
+        
+    
+    def ask(self):
+        global now_chosen
+        now_chosen = []
+        bot.send_message(message.chat.id, "Choose person: ", reply_markup=make(people))
+        while len(now_chosen) != 1:
+            pass
+        bot.send_message(message.chat.id, "Choose weapon: ", reply_markup=make(weapons))
+        while len(now_chosen) != 2:
+            pass
+        bot.send_message(message.chat.id, "Choose place: ", reply_markup=make(places))
+        while len(now_chosen) != 3:
+            pass
+        return now_chosen
+        
+    def accuse(self):
+        global now_chosen
+        now_chosen = []
+        player = players[self.now]
+        bot.send_message(message.chat.id, "Choose person: ", reply_markup=make(list(set(people).difference(player.knownCards()))))
+        while len(now_chosen) != 1:
+            pass
+        bot.send_message(message.chat.id, "Choose weapon: ", reply_markup=make(list(set(weapons).difference(player.knownCards()))))
+        while len(now_chosen) != 2:
+            pass
+        bot.send_message(message.chat.id, "Choose place: ", reply_markup=make(list(set(places).difference(player.knownCards()))))
+        while len(now_chosen) != 3:
+            pass
+        return now_chosen
+
 
 MAX_PLAYERS = 6
 bot = telebot.TeleBot(TOKEN2)
@@ -110,106 +250,122 @@ my_ans = ''
 #    print(message.text)
 
 
-def playersToString(names):
-    ans = ''
-    for elem in names:
-        ans += elem[1] + '\n'
-    return ans
-
-
-def go(index):
-    global my_ans
-    my_ans = ''
-    man = (index + 1) % COUNT
-    while man != index and not answer(man):
-        my_ans = ''
-        man = (man + 1) % COUNT
-    if man == index:
-        send_all('Nobody can help!')
-    else:
-        bot.send_message(players[index][0], my_ans + ' from ' + players[man][1])
-        send_all('Answered by ' + players[man][1], [players[index], players[man]])
-
-
-def answer(man):
-    global my_ans
-    id = players[man][0]
-    Pl = GAME.players[man]
-    cards = set(Pl.cards)
-    now = set(now_chosen)
-    inter = now.intersection(cards)
-
-    print(inter)
-
-    if len(inter) == 0:
-        bot.send_message(id, "Choose answer: ", reply_markup=make(['NO']))
-        while len(my_ans) == 0:
-            pass
-        send_all(players[man][1] + " answered 'NO'", [players[man]])
-        return False
-    else:
-        bot.send_message(id, "Choose answer: ", reply_markup=make(list(inter)))
-        while len(my_ans) == 0:
-            pass
-        return True
-
 
 @bot.message_handler(commands=['play'])
-def get_players(message):
+def get_players(message): #new
     if GAME is not None:
         bot.send_message(message.chat.id, "Game has already started!")
         return
         
     global players
     
-    user = message.message_from
     id = message.chat.id
     name = message.chat.username
-    
+    user = telebot.types.User(id = id, username = name, first_name = message.chat.first_name, last_name = message.chat.last_name)
+    pl = Player(User = user)
     if len(players) >= MAX_PLAYERS:
         bot.send_message(id, "Sorry, no empty places!")
         return
-    elif user not in players:
-        players.append(user)
-        msg = bot.send_message(id, "Welcome to the game, {0}!".format(name))
-        send_all(playersToString(players))
-    
-    
-        
+    elif not hasPlayer(pl):
+        players.append(pl)
+        bot.send_message(id, "Welcome to the game, {0}!".format(str(players[-1])))
+        sendAdmin(str(players[-1]) + ' joined game')
+        print(playersList())
+        return
+    print(playersList())
 
-
+    
 @bot.message_handler(commands=['game'])
-def start_game(message):
-    global FINISHED
-    global GAME
-    global d
-    global active
-    if FINISHED:
+def start_game(message): #new
+    global GAME, active
+    if GAME is not None:
         msg = bot.send_message(message.chat.id, "Game has already started")
     else:
+        sendAdmin('Game starts')
         active = [True] * len(players)
-        FINISHED = True
-        print(players)
-        GAME = Game(len(players))
+        
         rd.shuffle(players)
+        GAME = Game(len(players))
         place = 0
-        for elem in players:
-            d[elem[0]] = place
+        for i in range(len(players)):
+            players[i].setNumber(place)
             place += 1
+            
+            
         for player in players:
             cards = GAME.cards(d[player[0]])
-            bot.send_message(player[0], cards[0])
-            bot.send_message(player[0], cards[1])
-        print(d, active)
-        print(GAME.killed())
-        printLog(str(d))
-        printLog(str(active))
-        printLog(str(players))
-        printLog(str(GAME.killed))
-        send_turn()
+            bot.send_message(player.id, cards)
+            bot.send_message(player.id, 'Ваши карты: ' + player.cardsInHand())
+        
+        GAME.game()
+        gemeEnd()
+        
+@bot.message_handler(commands=['help', 'start'])
+def helpMessege(message): #should be remake
+    printLog('help from ' + str(message.chat.id))
+    text = ('/help - чтобы снова увидеть\nвсё остальное спрашивать у @antonsa')
+    bot.send_message(message.chat.id, text)
 
 
-def make(arr):
+@bot.message_handler(commands=['how_use'])
+def use(message): #should be remake
+    printLog('how use from ' + str(message.chat.id))
+    id = message.chat.id
+    text = ('пиши @antonsa')
+    bot.send_message(id, text)
+
+
+@bot.message_handler(commands=['end'])
+def gemeEnd(message): #think is new
+    send_all('This game ends, new can start')
+    sendAdmin('Current game ends, new can start')
+    end()
+
+
+@bot.message_handler(commands=['full_end'])
+def botEnd(message): #new
+    printLog('end of bot')
+    send_all('This game and current session ends')
+    sendAdmin('This game and current session ends')
+    time.sleep(10)
+    print('full end')
+    exit(0)
+
+
+@bot.message_handler()
+def catch(message): #new
+    global now_chosen, my_ans
+    
+    text = message.text
+    
+    if text in ['Ваши карты', 'Спросить', 'Обвинить', 'Закончить']:
+        my_ans = text
+        return
+    if message.text in now_chosen or message.text == 'NO' or message.text == "YES":
+        my_ans = message.text
+        return
+    if message.text in people + weapons + places:
+        now_chosen += [message.text]
+        return
+    return
+
+
+def end(): #new
+    global players, GAME
+    printLog('end of game')
+    GAME = None
+    players = []
+
+    
+def playersList(): #new
+    ans = []
+    for elem in players:
+        ans.append(str(elem))
+    return ', '.join(ans)
+
+
+def make(arr): #new
+    arr = list(arr)
     printLog('make(' + str(arr) + ')')
     now = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
     i = 0
@@ -227,224 +383,71 @@ def make(arr):
         now.row(telebot.types.KeyboardButton(arr[i + 0]), telebot.types.KeyboardButton(arr[i + 1]))
         return now
     printLog('Why i print it?')
-    
 
-def make2(arr):
-    now = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
-    if len(arr) == 1:
-        now.row(telebot.types.KeyboardButton(arr[0]))
-    elif len(arr) == 2:
-        now.row(telebot.types.KeyboardButton(arr[0]), telebot.types.KeyboardButton(arr[1]))
-    elif len(arr) > 2:
-        now.row(telebot.types.KeyboardButton(arr[0]), telebot.types.KeyboardButton(arr[1]),
-                telebot.types.KeyboardButton(arr[2]))
-        now.row(telebot.types.KeyboardButton(arr[3]), telebot.types.KeyboardButton(arr[4]),
-                telebot.types.KeyboardButton(arr[5]))
-        if len(arr) == 9:
-            now.row(telebot.types.KeyboardButton(arr[6]), telebot.types.KeyboardButton(arr[7]),
-                    telebot.types.KeyboardButton(arr[8]))
-    return now
-
-
-@bot.message_handler(commands=['ask'])
-def ask(message):
-    global FINISHED, players, now_chosen, GAME, d, active, my_ans, CHOOSING_NOW, NUMBER_OF_PEOPLE, COUNT, HAS_ASKED
     
-    printLog('person ' + str(message.chat.id) + 'asks')
-    
-    if GAME is None:
-        printLog('Game not started yet')
-        return
-    
-    if not FINISHED:
-        return
-    if CHOOSING_NOW != d[message.chat.id]:
-        bot.send_message(message.chat.id, "Not your turn!")
-        return
-    if HAS_ASKED:
-        bot.send_message(message.chat.id, "You have already asked")
-        return
-    printLog('trash question are ignored' + str(message.chat.id))
-    HAS_ASKED = True
-    now_chosen = []
-    if not GAME.players[d[message.chat.id]].alive:
-        bot.send_message(message.chat.id, "You are dead!")
-        return
-    bot.send_message(message.chat.id, "Choose person: ", reply_markup=make(people))
-    while len(now_chosen) != 1:
-        pass
-    bot.send_message(message.chat.id, "Choose weapon: ", reply_markup=make(weapons))
-    while len(now_chosen) != 2:
-        pass
-    bot.send_message(message.chat.id, "Choose place: ", reply_markup=make(places))
-    while len(now_chosen) != 3:
-        pass
-    printLog('person has choosen  ' + ', '.join(now_chosen) + ' ' + str(message.chat.id))
-    bot.send_message(message.chat.id, "Your choice is: " + ', '.join(now_chosen))
-    send_all(players[d[message.chat.id]][1] + " asks: " + ', '.join(now_chosen), [players[d[message.chat.id]]])
-    go(d[message.chat.id])
-    printLog('ask of wanting to accuse ' + str(message.chat.id))
+def go(index): #think is new
+    global my_ans
     my_ans = ''
-    bot.send_message(message.chat.id, "Do you want to accuse?", reply_markup=make(["YES", "NO"]))
-    while my_ans == '':
-        pass
-    if my_ans == "YES":
-        printLog('want to accuse by ' + str(message.chat.id))
-        if not FINISHED:
-            return
-        if CHOOSING_NOW != d[message.chat.id]:
-            bot.send_message(message.chat.id, "Not your turn!")
-            return
-        if not GAME.players[d[message.chat.id]].alive:
-            bot.send_message(message.chat.id, "You are dead!")
-            return
-        now_chosen = []
-        printLog('person ' + str(message.chat.id) + ' choose')
-        bot.send_message(message.chat.id, "Choose person: ", reply_markup=make(people))
-        while len(now_chosen) != 1:
-            pass
-        bot.send_message(message.chat.id, "Choose weapon: ", reply_markup=make(weapons))
-        while len(now_chosen) != 2:
-            pass
-        bot.send_message(message.chat.id, "Choose place: ", reply_markup=make(places))
-        while len(now_chosen) != 3:
-            pass
-        printLog('person ' + str(message.chat.id) + ' has choosen  ' + ', '.join(now_chosen))
-        if check_ans(now_chosen):
-            printLog(str(message.chat.id) + " guess")
-            send_all(players[d[message.chat.id]][1] + " won!")
-            send_all("Correct answer is: " + ', '.join(GAME.killed()))
-            end()
-        else:
-            printLog(str(message.chat.id) + " didn't guess")
-            GAME.players[d[message.chat.id]].alive = False
-            NUMBER_OF_PEOPLE -= 1
-            send_all(players[d[message.chat.id]][1] + " has accused: " + ', '.join(now_chosen))
-            send_all(players[d[message.chat.id]][1] + " didn't guess correctly! He's out of the game!")
-            bot.send_message(message.chat.id, "Correct answer is: " + ', '.join(GAME.killed()))
-            if not FINISHED:
-                return
-            if message is None:
-                return
-            if CHOOSING_NOW != d[message.chat.id]:
-                bot.send_message(message.chat.id, "Not your turn!")
-                return
-            HAS_ASKED = False
-            CHOOSING_NOW = (CHOOSING_NOW + 1) % COUNT
-            while not GAME.players[CHOOSING_NOW].alive:
-                CHOOSING_NOW = (CHOOSING_NOW + 1) % COUNT
-            send_turn()
-            end()
-
-        if NUMBER_OF_PEOPLE == 1:
-            for i in range(len(GAME.players)):
-                pl = GAME.players[i]
-                if pl.alive == True:
-                    send_all(players[i][1] + ' won!')
-                    bot.send_message(players[i][0], "Correct answer is: " + ', '.join(GAME.killed()))
-                    break
-            end()
+    man = (index + 1) % GAME.n
+    while man != index and not answer(man):
+        my_ans = ''
+        man = (man + 1) % GAME.n
+    if man == index:
+        send_all('Nobody can help!')
     else:
-        printLog(str(message.chat.id) + " didn't accuse")
-        if not FINISHED:
-            return
-        if message is None:
-            return
-        if CHOOSING_NOW != d[message.chat.id]:
-            bot.send_message(message.chat.id, "Not your turn!")
-            return
-        HAS_ASKED = False
-        CHOOSING_NOW = (CHOOSING_NOW + 1) % COUNT
-        while not GAME.players[CHOOSING_NOW].alive:
-            CHOOSING_NOW = (CHOOSING_NOW + 1) % COUNT
-        send_turn()
+        bot.send_message(players[index].id, my_ans + ' from ' + str(players[man]))
+        send_all('Answered by ' + str(players[man]), [players[index], players[man]])
 
 
-@bot.message_handler(commands=['help', 'start'])
-def helpMessege(message):
-    printLog('help from ' + str(message.chat.id))
-    text = ('/help - see this message again' + '\n' +
-            '/play - join unstarted game' + '\n' +
-            '/game - start new game with conected players' + '\n' +
-            '/ask - ask one CLUEDO question' + '\n' +
-            '/how_use - how use this bot')
-    bot.send_message(message.chat.id, text)
-
-
-@bot.message_handler(commands=['how_use'])
-def use(message):
-    printLog('how use from ' + str(message.chat.id))
-    id = message.chat.id
-    text = ('если ты хочешь изъявить желане играть, то напиши команду /play' + '\n' +
-            'чтобы начать игру с другими подключенными игроками напиши /game' + '\n' +
-            'для отправки вопроса команда /ask' + '\n' +
-            'после надо или обвинять /accuse или закончить ход /finish' + '\n' +
-            'ход перейдет к следующему игроку' + '\n')
-    bot.send_message(id, text)
-
-
-@bot.message_handler(commands=['end'])
-def gemeEnd(message):
-    send_all('This game ends, new can start')
-    end()
-
-
-@bot.message_handler(commands=['full_end'])
-def botEnd(message):
-    printLog('end of bot')
-    send_all('This game and current session ends')
-    time.sleep(10)
-    print('full end')
-    exit(0)
-
-
-@bot.message_handler()
-def tmp(message):
-    global now_chosen, my_ans
-    if message.text in now_chosen or message.text == 'NO' or message.text == "YES":
-        my_ans = message.text
-
-    if message.text in people + weapons + places:
-        now_chosen += [message.text]
-
-    return
-
-
-def end():
-    global FINISHED, players, now_chosen, GAME, d, active, my_ans, CHOOSING_NOW, NUMBER_OF_PEOPLE, COUNT, HAS_ASKED
-    printLog('end of game')
-    FINISHED = False
-    players = []
-    now_chosen = []
-    GAME = None
-    d = dict()
-    active = []
-    my_ans = ''
-    CHOOSING_NOW = 0
-    NUMBER_OF_PEOPLE = 0
-    COUNT = 0
-    HAS_ASKED = False
+def answer(man): #think is new
+    global my_ans
     
+    id = players[man].id
+    Pl = players[man]
+    cards = set(Pl.cards)
+    now = set(now_chosen)
+    inter = now.intersection(cards)
+
+    print(inter)
+
+    if len(inter) == 0:
+        bot.send_message(id, "Choose answer: ", reply_markup=make(['NO']))
+        while len(my_ans) == 0:
+            pass
+        send_all(players[man][1] + " answered 'NO'", [players[man]])
+        return False
+    else:
+        bot.send_message(id, "Choose answer: ", reply_markup=make(list(inter)))
+        while len(my_ans) == 0:
+            pass
+        return True    
+    
+def hasPlayer(pl): #new
+    for elem in players:
+        if elem.id == pl.id:
+            return True
+    return False
     
 
+def check_ans(arr): #new
+    return sorted(GAME.who_killed()) == sorted(arr)
 
-def check_ans(arr):
-    return sorted(GAME.killed()) == sorted(arr)
 
-
-def send_all(msg, bad=[]):
+def send_all(msg, bad=[]): #new
     for player in players:
         if player not in bad:
-            bot.send_message(player[0], msg)
+            bot.send_message(player.id, msg)
     return
 
+def sendAdmin(text): #new
+    bot.send_message(Admin.id, 'Admin : ' + text)
 
-def send_turn():
+def send_turn(player): #new
     for player in players:
-        bot.send_message(player[0], "Now it's " + players[CHOOSING_NOW][1] + "'s turn")
+        bot.send_message(player[0], "Now it's " + str(player) + "'s turn")
     return
 
-def printLog(text):
+def printLog(text): #should be checked
     global file_name
     logs = open(file_name, "a")
     logs.write(str(text) + '\n\n')
@@ -455,7 +458,7 @@ file_name = "logs" + str(time.time()) + ".txt"
 loggs = open(file_name, "w")
 loggs.close()
 
-try:
-    bot.polling()
-except Exception as err:
-    printLog(str(err))
+#try:
+bot.polling()
+#except Exception as err:
+#    printLog(str(err))

@@ -171,9 +171,9 @@ class Game:
         
         if my_ans == 'Закончить':
             my_ans = ''
-           self.now += 1
+            self.now += 1
             return False
-        if my_ans == 'Обвинить'
+        if my_ans == 'Обвинить':
             choice = self.accuse()
             bot.send_message(players[self.now].id, "Your choice is: " + ', '.join(choice))
             

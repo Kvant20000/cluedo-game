@@ -71,9 +71,9 @@ bot = telebot.TeleBot(TOKEN)
 my_ans = ''
 
 
-@bot.message_handler()
-def trash(message):
-    print(message.text)
+#@bot.message_handler()
+#def trash(message):
+#    print(message.text)
 
 
 def playersToString(names):
@@ -335,6 +335,7 @@ def helpMessege(message):
             '/play - join unstarted game' + '\n' +
             '/game - start new game with conected players' + '\n' +
             '/ask - ask one CLUEDO question' + '\n' +
+            '/cards - to see opened and your cards' + '\n' +
             '/how_use - how use this bot')
     bot.send_message(message.chat.id, text)
 

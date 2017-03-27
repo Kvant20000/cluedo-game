@@ -128,17 +128,15 @@ def get_players(message):
     global players
     Id = message.chat.id
     user = message.chat.username
-    now_plays = players
     if len(players) >= MAX_PLAYERS:
-        msg = bot.send_message(message.chat.id, "Sorry, no empty places!")
+        bot.send_message(message.chat.id, "Sorry, no empty places!")
         return
     elif (Id, user) not in players:
         players.append((Id, user))
-        msg = bot.send_message(message.chat.id, "Welcome to the game, {0}!".format(user))
+        bot.send_message(message.chat.id, "Welcome to the game, {0}!".format(user))
+        send_all(playersToString(players))
     print(players)
     printLog(players)
-    if len(players) == len(now_plays) + 1:
-        send_all(playersToString(players))
 
 
 @bot.message_handler(commands=['game'])
@@ -148,7 +146,7 @@ def start_game(message):
     global d
     global active
     if FINISHED:
-        msg = bot.send_message(message.chat.id, "Game has already started")
+        bot.send_message(message.chat.id, "Game has already started")
     else:
         active = [True] * len(players)
         FINISHED = True

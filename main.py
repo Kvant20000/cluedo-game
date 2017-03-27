@@ -302,7 +302,6 @@ def ask(message):
             while not GAME.players[CHOOSING_NOW].alive:
                 CHOOSING_NOW = (CHOOSING_NOW + 1) % COUNT
             send_turn()
-            end()
 
         if NUMBER_OF_PEOPLE == 1:
             for i in range(len(GAME.players)):

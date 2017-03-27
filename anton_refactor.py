@@ -458,7 +458,7 @@ file_name = "logs" + str(time.time()) + ".txt"
 loggs = open(file_name, "w")
 loggs.close()
 
-#try:
-bot.polling()
-#except Exception as err:
-#    printLog(str(err))
+try:
+    bot.polling()
+except Exception as err:
+    printLog(str(err))

@@ -127,7 +127,7 @@ def get_players(message):
         return
     global players
     Id = message.chat.id
-    user = message.chat.username
+    user = str(message.chat.username)
     if len(players) >= MAX_PLAYERS:
         bot.send_message(message.chat.id, "Sorry, no empty places!")
         return

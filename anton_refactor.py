@@ -482,7 +482,7 @@ loggs = open(file_name, "w")
 loggs.close()
 
 try:
-    bot.polling()
     sendAdmin('Bot starts')
+    bot.polling()
 except Exception as err:
     printLog(str(err))

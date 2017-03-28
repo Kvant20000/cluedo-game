@@ -120,7 +120,7 @@ class Game:
                 self.now = (self.now + 1) % self.n
                 
             keys = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
-            keys.row(telebot.types.KeyboardButton('Ваши карты'))
+            keys.row(telebot.types.KeyboardButton('Карты'))
             keys.row(telebot.types.KeyboardButton('Спросить'), telebot.types.KeyboardButton('Обвинить'))
             keys.row(telebot.types.KeyboardButton('Закончить'))
             
@@ -134,15 +134,29 @@ class Game:
             my_ans = ''
             self.now = (self.now + 1) % self.n
         return    
-             
+    
+    def printCards(self):
+        print('cards')
+        pl = players[self.now]
+        text = ['', '\n', '\n', '\n\nОстальные\n', 'Кто: ', 'Чем:', 'Где:']
+        text[0] += str(self)
+        text[1] += 'Карты в руке: ' + pl.cardsInHand()
+        text[2] += 'Известные тебе: ' + ', '.join(list(pl.know.difference(set(pl.cards)).difference(self.opencards)))
+        text[3] += ''
+        text[4] += ', '.join(list(set(people).difference(pl.know)))
+        text[5] += ', '.join(list(set(weapons).difference(pl.know)))
+        text[6] += ', '.join(list(set(places).difference(pl.know)))
+        bot.send_message(pl.id, '\n'.join(text))
+        return
+        
     def turn(self):
         global my_ans
         while True:
             if my_ans == 'Закончить':
                 my_ans = ''
                 return False
-            if my_ans == 'Ваши карты':
-                bot.send_message(players[self.now].id, ', '.join(players[self.now].knownCards()))
+            if my_ans == 'Карты':
+                self.printCards()
                 my_ans = ''
                 
                 keys = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
@@ -337,7 +351,7 @@ def catch(message): #new
     
     text = message.text
     
-    if text in ['Ваши карты', 'Спросить', 'Обвинить', 'Закончить']:
+    if text in ['Карты', 'Спросить', 'Обвинить', 'Закончить']:
         my_ans = text
         return
     if message.text in now_chosen or message.text == 'NO' or message.text == "YES":

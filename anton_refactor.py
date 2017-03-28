@@ -483,5 +483,6 @@ loggs.close()
 
 try:
     bot.polling()
+    sendAdmin('Bot starts')
 except Exception as err:
     printLog(str(err))

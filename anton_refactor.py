@@ -454,9 +454,9 @@ def send_all(msg, bad=[]): #new
 def sendAdmin(text): #new
     bot.send_message(Admin.id, 'Admin : ' + text)
 
-def send_turn(player): #new
+def send_turn(pl): #new
     for player in players:
-        bot.send_message(player.id, "Now it's " + str(player) + "'s turn")
+        bot.send_message(player.id, "Now it's " + str(pl) + "'s turn")
     return
 
 def printLog(text): #should be checked

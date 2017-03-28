@@ -14,7 +14,7 @@ TOKEN2 = "314275855:AAEA4Z-sF5E213qVm38VE2CJ8d8dVV6dZCg"
 
 Admin = telebot.types.User(id = 186898465, username = 'antonsa', first_name = 'Anton', last_name = 'Anikushin')
 
-am_open = [0, 0, 0, 0, 2, 3, 0]  # other option is [0, 0, 0, 6, 6, 3, 6]
+am_open = [0, 0, 0, 6, 6, 3, 6] #[0, 0, 0, 0, 2, 3, 0]
 people = ["Ворона", "Берёза", "Князь Пожарский", "Васечка", "Афганский мафиози", "СВ"]  # КТО?
 weapons = ["Тихим Доном", "клавиатурой", "выносом мозга", "тупыми мемами", "коробкой из-под пиццы",
            "огнетушителем"]  # ЧЕМ?
@@ -46,6 +46,7 @@ class Player:
         
     def __str__(self):
         return str(self.username) + '(' + str(self.first_name) + ' ' + str(self.last_name) + ')'
+        return str(self.first_name) + ' ' + str(self.last_name) + '(' + str(self.username) + ')'
     
     def setUser(self, User):
         self.user = User
@@ -187,7 +188,6 @@ class Game:
             send_all(str(players[self.now]) + " didn't guess correctly! He's out of the game!")
             bot.send_message(players[self.now].id, "Correct answer is: " + ', '.join(self.who_killed()))
             
-            
         if self.alive == 1:
             for i in range(self.n):
                 pl = players[i]
@@ -247,7 +247,7 @@ my_ans = ''
 
 
 
-@bot.message_handler(commands=['play'])
+@bot.message_handler(commands=['join'])
 def get_players(message): #new
     if GAME is not None:
         bot.send_message(message.chat.id, "Game has already started!")
@@ -308,7 +308,7 @@ def helpMessege(message): #should be remake
 
 @bot.message_handler(commands=['how_use'])
 def use(message): #should be remake
-    printLog('how use from ')
+    #printLog('how use from ')
     id = message.chat.id
     text = ('пиши @antonsa')
     bot.send_message(id, text)
@@ -351,7 +351,7 @@ def catch(message): #new
 
 def end(): #new
     global players, GAME
-    printLog('end of game')
+    printLog('end of game\n-------------------------------------------------------\n\n')
     GAME = None
     players = []
 
@@ -365,7 +365,6 @@ def playersList(): #new
 
 def make(arr): #new
     arr = list(arr)
-    printLog('make(' + str(arr) + ')')
     now = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
     i = 0
     while i + 3 <= len(arr):
@@ -381,8 +380,7 @@ def make(arr): #new
     elif d == 2:
         now.row(telebot.types.KeyboardButton(arr[i + 0]), telebot.types.KeyboardButton(arr[i + 1]))
         return now
-    printLog('Why i print it?')
-
+    
     
 def go(index): #think is new
     global my_ans
@@ -468,7 +466,7 @@ file_name = logName()
 loggs = open(file_name, "w")
 loggs.close()
 
-#try:
+try:
 bot.polling()
-#except Exception as err:
-#    printLog(str(err))
+except Exception as err:
+    printLog(str(err))

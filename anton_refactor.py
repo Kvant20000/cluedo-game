@@ -280,8 +280,8 @@ def get_players(message): #new
         players.append(pl)
         bot.send_message(id, "Welcome to the game, {0}!".format(str(players[-1])))
         sendAdmin(str(players[-1]) + ' joined game')
+        send_all(playersList())
         print(playersList())
-        send_all(playerList)
         return
     print(playersList())
 

@@ -333,19 +333,27 @@ def use(message): #should be remake
 
 @bot.message_handler(commands=['end'])
 def gameEnd(message = None): #think is new
-    send_all('This game ends, new can start')
-    sendAdmin('Current game ends, new can start')
-    end()
+    if not (message.chat.id in AdminId):
+        bot.send_message(message.chat.id, "No permission!")
+        return
+    else:
+        send_all('This game ends, new can start')
+        sendAdmin('Current game ends, new can start')
+        end()
 
 
 @bot.message_handler(commands=['full_end'])
 def botEnd(message = None): #new
-    printLog('end of bot')
-    send_all('This game and current session ends')
-    sendAdmin('This game and current session ends')
-    time.sleep(10)
-    print('full end')
-    exit(0)
+    if not (message.chat.id in AdminId):
+        bot.send_message(message.chat.id, "No permission!")
+        return
+    else:
+        printLog('end of bot')
+        send_all('This game and current session ends')
+        sendAdmin('This game and current session ends')
+        time.sleep(10)
+        print('full end')
+        exit(0)
 
 
 @bot.message_handler()
@@ -457,7 +465,8 @@ def send_all(msg, bad=[]): #new
     return
 
 def sendAdmin(text): #new
-    bot.send_message(Admin.id, 'Admin : ' + text)
+    for admin in Admins:
+        bot.send_message(admin.id, 'Admin {0} {1}: '.format(admin.first_name, admin.last_name) + text)
 
 def send_turn(player): #new
     for player in players:

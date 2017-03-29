@@ -12,7 +12,8 @@ from copy import deepcopy
 TOKEN = "303602093:AAGz6ihk895s3K07vYqc6eBY8InFwX4YuhQ"
 TOKEN2 = "314275855:AAEA4Z-sF5E213qVm38VE2CJ8d8dVV6dZCg"
 
-Admin = telebot.types.User(id = 186898465, username = 'antonsa', first_name = 'Anton', last_name = 'Anikushin')
+AdminId = [186898465, 319325008]
+Admins = [telebot.types.User(id = 186898465, username = 'antonsa', first_name = 'Anton', last_name = 'Anikushin'), telebot.types.User(id = 319325008, first_name = '')]
 
 am_open = [0, 0, 0, 6, 6, 3, 6] #[0, 0, 0, 0, 2, 3, 0]
 people = ["Ворона", "Берёза", "Князь Пожарский", "Васечка", "Афганский мафиози", "СВ"]  # КТО?
@@ -258,8 +259,9 @@ my_ans = ''
 #@bot.message_handler()
 #def trash(message):
 #    print(message.text)
-
-
+def fromAdmin(message):
+    return message.chat.id in AdminId
+    
 
 @bot.message_handler(commands=['join'])
 def get_players(message): #new
@@ -286,7 +288,7 @@ def get_players(message): #new
     print(playersList())
 
     
-@bot.message_handler(commands=['game'])
+@bot.message_handler(commands=['game'], func=fromAdmin)
 def start_game(message): #new
     global GAME, active
     if GAME is not None:
@@ -349,6 +351,9 @@ def botEnd(message = None): #new
 @bot.message_handler()
 def catch(message): #new
     global now_chosen, my_ans
+    
+    if message.chat.id != players[GAME.now].id:
+        return
     
     text = message.text
     
@@ -454,9 +459,9 @@ def send_all(msg, bad=[]): #new
 def sendAdmin(text): #new
     bot.send_message(Admin.id, 'Admin : ' + text)
 
-def send_turn(pl): #new
+def send_turn(player): #new
     for player in players:
-        bot.send_message(player.id, "Now it's " + str(pl) + "'s turn")
+        bot.send_message(player.id, "Now it's " + str(player) + "'s turn")
     return
 
 def printLog(text): #should be checked

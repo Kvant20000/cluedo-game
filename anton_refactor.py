@@ -321,7 +321,7 @@ def start_game(message): #new
         for i in range(len(players)):
             players[i].setNumber(place)
             for card in GAME.opencards:
-                player[i].addCards(card)
+                players[i].addCards(card)
             place += 1
             
             

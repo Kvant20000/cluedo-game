@@ -98,6 +98,7 @@ class Game:
         am_per_player = (len(deck) - am_open[n]) // n
         for i in range(n):
             players[i].setCards(deck[am_open[n] + i * am_per_player: am_open[n] + i * am_per_player + am_per_player])
+        print(players[i].cards())
     
     def numberById(id):
         for elem in players:

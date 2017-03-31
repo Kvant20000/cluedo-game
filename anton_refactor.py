@@ -98,7 +98,7 @@ class Game:
         am_per_player = (len(deck) - am_open[n]) // n
         for i in range(n):
             players[i].setCards(deck[am_open[n] + i * am_per_player: am_open[n] + i * am_per_player + am_per_player])
-        print(players[i].cards())
+        printLog(players[i].cards)
     
     def numberById(id):
         for elem in players:
@@ -114,7 +114,7 @@ class Game:
         return s
     
     def keyboard(self, cards = True, ask = True, accuse = True, finish = True):
-        keys = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
+        keys = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=False)
         if cards:
             keys.row(telebot.types.KeyboardButton('Карты'))
             
@@ -152,7 +152,6 @@ class Game:
         
     def turn(self):
         global my_ans
-        cards = True
         
         while True:
             if my_ans == 'Закончить':
@@ -162,23 +161,22 @@ class Game:
             if my_ans == 'Карты':
                 self.printCards()
                 my_ans = ''
-                cards = False
-                bot.send_message(players[self.now].id, 'Выберите действие:', reply_markup=self.keyboard(cards=cards, ask = not self.asked))
+                bot.send_message(players[self.now].id, 'Выберите действие:', reply_markup=self.keyboard())
                 
-            if my_ans == 'Спросить' and not self.asked:
-                choice = self.ask()
-                bot.send_message(players[self.now].id, "Ваш выбор: " + ', '.join(choice))
-                send_all(str(players[self.now]) + " спросил: " + ', '.join(now_chosen), [players[self.now].id])
-                go(self.now)
-                players[self.now].addCards(my_ans)
-                my_ans = ''
-                self.asked = True
-                bot.send_message(players[self.now].id, 'Выберите действие:', reply_markup=self.keyboard(cards=cards, ask = not self.asked))
-                
-            elif my_ans == 'Спросить':
-                bot.send_message(players[self.now].id, "Вы уже спрашивали")
-                my_ans = ''
-                bot.send_message(players[self.now].id, 'Выберите действие:', reply_markup=self.keyboard(cards=cards, ask = not self.asked))
+            if my_ans == 'Спросить':
+                if not self.asked:
+                    choice = self.ask()
+                    bot.send_message(players[self.now].id, "Ваш выбор: " + ', '.join(choice))
+                    send_all(str(players[self.now]) + " спросил: " + ', '.join(now_chosen), [players[self.now].id])
+                    go(self.now)
+                    players[self.now].addCards(my_ans)
+                    my_ans = ''
+                    self.asked = True
+                    bot.send_message(players[self.now].id, 'Выберите действие:', reply_markup=self.keyboard())
+                else:
+                    bot.send_message(players[self.now].id, "Вы уже спрашивали")
+                    my_ans = ''
+                    bot.send_message(players[self.now].id, 'Выберите действие:', reply_markup=self.keyboard())
                 
             if my_ans == 'Обвинить':
                 choice = self.accuse()
@@ -191,7 +189,7 @@ class Game:
     def printCards(self):
         print('cards')
         pl = players[self.now]
-        text = ['', '\n', '\n', '\n\nОстальные\n', 'Кто: ', 'Чем:', 'Где:']
+        text = ['', '\n', '\n', '\n\nОстальные\n', 'Кто: ', 'Чем: ', 'Где: ']
         text[0] += str(self)
         text[1] += 'Карты в руке: ' + pl.cardsInHand()
         text[2] += 'Известные тебе: ' + ', '.join(list(pl.know.difference(set(pl.cards)).difference(self.opencards)))
@@ -302,9 +300,9 @@ def get_players(message): #new
         bot.send_message(id, "Добро пожаловать в игру, {0}!".format(str(players[-1])))
         sendAdmin(str(players[-1]) + ' joined game')
         send_all(playersList())
-        print(playersList())
+        printLog(playersList())
         return
-    print(playersList())
+    printLog(playersList())
 
     
 @bot.message_handler(commands=['game'], func=fromAdmin)

@@ -61,7 +61,7 @@ def status(message):
     if message.text == '/status':
         info(message)
         return
-    gm = message.text.replace('/status ')
+    gm = message.text.replace('/status ', '')
     bot.send_message(message.chat.id, ourGames.games[gm])
     
 @bot.message_handler()

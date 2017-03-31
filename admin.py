@@ -62,7 +62,7 @@ def status(message):
         info(message)
         return
     gm = message.text.replace('/status ')
-    bot.send_message()
+    bot.send_message(message.chat.id, ourGames.games[gm])
     
 @bot.message_handler()
 def other(message):

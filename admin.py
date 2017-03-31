@@ -12,16 +12,17 @@ import os
 
 TOKEN = "355967723:AAG4x935upwWEt-Ne_72Tx1L_W0vUMGINiI"
 
-AdminId = [186898465]#, 319325008]
-Admins = [telebot.types.User(id = 186898465, username = 'antonsa', first_name = 'Anton', last_name = 'Anikushin')]#, telebot.types.User(id = 319325008, username = 'greatkorn', first_name = 'Anton', last_name = 'Kvasha')]
+AdminId = [186898465, 319325008]
+Admins = [telebot.types.User(id = 186898465, username = 'antonsa', first_name = 'Anton', last_name = 'Anikushin'), telebot.types.User(id = 319325008, username = 'greatkorn', first_name = 'Anton', last_name = 'Kvasha')]
 
 bot = telebot.TeleBot(TOKEN)
 
-gameList = [{'name' : 'cluedo V1', 'bot' : '@cluedo_agent_bot'}, {'name' : 'cluedo v2', 'bot' : '@try_masha_bot'}]
-
 class Game():
     titles = ['cluedo V1', 'cluedo V2']
-    paths = {'cluedo' : 'refactor.py'}
+    paths = {'cluedo' : 'cluedo_main.py'}
+    gameList = [{'name' : 'cluedo V2', 'bot' : '@cluedo_agent_bot', 'status' : 'stopped'}, 
+                {'name' : 'cluedo V1', 'bot' : '@try_masha_bot', 'status' : 'stopped'}]
+    games = {'cluedo' : 'stopped'}
     def __init__(self):
         pass
     
@@ -29,20 +30,40 @@ def fromAdmin(message):
     return message.chat.id in AdminId
 
     
-@bot.message_handler(commands=['start', 'games', 'game', 'help'])
-def help(message):
-    print(message.text)
+@bot.message_handler(commands=['start', 'games', 'game', 'help'], func=fromAdmin)
+def info(message):
     id = message.chat.id
+    for game in ourGames.gameList:
+        bot.send_message(id, game['name'] + ': ' + game['bot'] + '  ' + game['status'])
+
+@bot.message_handler(commands=['help', 'start'])        
+def help(message):
+    id = message.chat.id
+    bot.send_message("List of Antons' games")
     for game in gameList:
         bot.send_message(id, game['name'] + ': ' + game['bot'])
 
-
+        
 @bot.message_handler(commands=['cluedo'], func=fromAdmin)
 def startCluedo(message):
-    sendAdmin(message.chat.username + ' starts cluedo support bot')
-    os.system('C:\\python34\\python.exe ' + paths[cluedo])
-    sendAdmin('Cluedo support bot ends')
+    print(message.text)
+    sendAdmin(str(message.chat.id) + ' starts cluedo main bot')
+    ourGames.gameList[0]['status'] = 'running'
+    ourGames.games['cluedo'] = 'running'
+    os.system('python ' + ourGames.paths['cluedo'])
+    sendAdmin('Cluedo main bot ends')
+    ourGames.gameList[0]['status'] = 'stopped'
+    ourGames.games['cluedo'] = 'stopped'
 
+    
+@bot.message_handler(commands=['status'], func=fromAdmin)
+def status(message):
+    if message.text == '/status':
+        info(message)
+        return
+    gm = message.text.replace('/status ')
+    bot.send_message()
+    
 @bot.message_handler()
 def other(message):
     print(message.text, 'from', message.chat.username)
@@ -55,6 +76,6 @@ def sendAdmin(text): #new
 #other function
 
 
-    
+ourGames = Game()    
 sendAdmin('Admin bot starts')
 bot.polling()

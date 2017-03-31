@@ -44,10 +44,21 @@ class Player:
             self.first_name = User.first_name
             self.last_name = User.last_name
         
+        self.check()
         
     def __str__(self):
-        return str(self.username) + '(' + str(self.first_name) + ' ' + str(self.last_name) + ')'
-        return str(self.first_name) + ' ' + str(self.last_name) + '(' + str(self.username) + ')'
+        if str(self.username) == '':
+            return str(self.first_name) + ' ' + str(self.last_name)
+        else:
+            return str(self.username)
+
+    def check(self):
+        if self.username is None:
+            self.username = ''
+        if self.first_name is None:
+            self.first_name = ''
+        if self.last_name is None:
+            self.last_name = ''
     
     def setUser(self, User):
         self.user = User
@@ -111,6 +122,8 @@ class Game:
 
     def __str__(self):
         s = 'Открытые карты: ' + ', '.join(self.opencards)
+        if s == 'Открытые карты: ':
+            s = 'Открытых карт нет'
         return s
     
     def keyboard(self, cards = True, ask = True, accuse = True, finish = True):
@@ -254,7 +267,7 @@ class Game:
         return False
 
 MAX_PLAYERS = 6
-bot = telebot.TeleBot(TOKEN2)
+bot = telebot.TeleBot(TOKEN)
 GAME = None
 players = []
 #FINISHED = False
@@ -314,6 +327,11 @@ def start_game(message): #new
         sendAdmin('Игра начинается')
         active = [True] * len(players)
         
+        send_all('Карты в игре')
+        send_all('Кто :' + ', '.join(people))
+        send_all('Чем :' + ', '.join(weapons))
+        send_all('Где :' + ', '.join(places))
+        
         rd.shuffle(players)
         GAME = Game(len(players))
         place = 0
@@ -363,16 +381,15 @@ def gameEnd(message = None): #think is new
         end()
 
 
-@bot.message_handler(commands=['full_end'], func=fromAdmin)
+@bot.message_handler(commands=['full_end'])
 def botEnd(message = None): #new
     if not (message.chat.id in AdminId):
-        bot.send_message(message.chat.id, "Нет доступа(разрешения)!")
+        bot.send_message(message.chat.id, "Отказано в доступе!")
         return
     else:
         printLog('end of bot')
-        send_all('Игра закончена, бот остановден')
-        sendAdmin('Игра закончена, бот остановден')
-        time.sleep(10)
+        send_all('Игра закончена, бот остановлен')
+        sendAdmin('Игра закончена, бот остановлен')
         print('full end')
         exit(0)
 
@@ -515,6 +532,7 @@ def logName():
     log += str(year) + '.' + str(month) + '.' + str(day) + ' ' + str(hour) + ';' + str(minute) + ';' + str(seconds) + ').txt'
     return log
 
+    
 file_name = logName()
 loggs = open(file_name, "w")
 loggs.close()

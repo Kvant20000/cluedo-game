@@ -9,6 +9,7 @@ import sys
 import datetime
 import random as rd
 import os
+import cluedo_main
 
 TOKEN = "355967723:AAG4x935upwWEt-Ne_72Tx1L_W0vUMGINiI"
 
@@ -19,7 +20,6 @@ bot = telebot.TeleBot(TOKEN)
 
 class Game():
     titles = ['cluedo V1', 'cluedo V2']
-    paths = {'cluedo' : 'cluedo_main.py'}
     gameList = [{'name' : 'cluedo V2', 'bot' : '@cluedo_agent_bot', 'status' : 'stopped'}, 
                 {'name' : 'cluedo V1', 'bot' : '@try_masha_bot', 'status' : 'stopped'}]
     games = {'cluedo' : 'stopped'}
@@ -50,7 +50,11 @@ def startCluedo(message):
     sendAdmin(str(message.chat.id) + ' starts cluedo main bot')
     ourGames.gameList[0]['status'] = 'running'
     ourGames.games['cluedo'] = 'running'
-    os.system('python ' + ourGames.paths['cluedo'])
+    
+    try:
+        cluedo_main.main()
+    except:
+        sendAdmin('Cluedo main bot falls down')
     sendAdmin('Cluedo main bot ends')
     ourGames.gameList[0]['status'] = 'stopped'
     ourGames.games['cluedo'] = 'stopped'
@@ -61,8 +65,11 @@ def status(message):
     if message.text == '/status':
         info(message)
         return
-    gm = message.text.replace('/status ', '')
-    bot.send_message(message.chat.id, ourGames.games[gm])
+    try:
+        gm = message.text.replace('/status ', '')
+        bot.send_message(message.chat.id, ourGames.games[gm])
+    except:
+        bot.send_message(message.chat.id, 'No such game')
     
 @bot.message_handler()
 def other(message):
@@ -79,3 +86,4 @@ def sendAdmin(text): #new
 ourGames = Game()    
 sendAdmin('Admin bot starts')
 bot.polling()
+sendAdmin('Admin bot ends')

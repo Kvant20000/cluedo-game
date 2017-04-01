@@ -12,7 +12,7 @@ from copy import deepcopy
 TOKEN = "303602093:AAGz6ihk895s3K07vYqc6eBY8InFwX4YuhQ"
 TOKEN2 = "314275855:AAEA4Z-sF5E213qVm38VE2CJ8d8dVV6dZCg"
 
-AdminId = [186898465, 319325008]
+AdminId = [186898465, 319325008, 355967723]
 Admins = [telebot.types.User(id = 186898465, username = 'antonsa', first_name = 'Anton', last_name = 'Anikushin'), telebot.types.User(id = 319325008, username = 'greatkorn', first_name = 'Anton', last_name = 'Kvasha')]
 
 am_open = [0, 0, 0, 6, 6, 3, 6] #[0, 0, 0, 0, 2, 3, 0]
@@ -246,12 +246,14 @@ class Game:
     
     def checking(self, ans):
         if check_ans(ans):
+            bot.send_photo(players[self.now].id, open('win.png', 'rb'))
             send_all(str(players[self.now]) + " выиграл!")
             send_all("Правильный ответ: " + ', '.join(self.who_killed()), [players[self.now].id])
             return True
         else:
             players[self.now].alive = False
             self.alive -= 1
+            bot.send_photo(players[self.now].id, open('lose.jpg', 'rb'))
             send_all(str(players[self.now]) + " обвинил: " + ', '.join(ans))
             send_all(str(players[self.now]) + " не угадал! Он вышел из игры!")
             bot.send_message(players[self.now].id, "Правильный ответ: " + ', '.join(self.who_killed()))
@@ -260,6 +262,7 @@ class Game:
             for i in range(self.n):
                 pl = players[i]
                 if pl.alive == True:
+                    bot.send_photo(players[i].id, open('win.png', 'rb'))
                     send_all(str(players[i]) + ' выиграл!')
                     bot.send_message(players[i].id, "Правильный ответ: " + ', '.join(self.who_killed()))
                     break
@@ -267,7 +270,7 @@ class Game:
         return False
 
 MAX_PLAYERS = 6
-bot = telebot.TeleBot(TOKEN)
+bot = telebot.TeleBot(TOKEN2)
 GAME = None
 players = []
 #FINISHED = False
@@ -277,11 +280,11 @@ now_chosen = []
 my_ans = ''
 who = -1
 
-GAME = None
-players = []
+
 #FINISHED = False
 #active = []
 
+file_name = 'logs.txt'
 now_chosen = []
 my_ans = ''
 who = -1
@@ -391,7 +394,7 @@ def botEnd(message = None): #new
         send_all('Игра закончена, бот остановлен')
         sendAdmin('Игра закончена, бот остановлен')
         print('full end')
-        exit(0)
+        bot.stop_polling()
 
 
 @bot.message_handler()
@@ -532,13 +535,18 @@ def logName():
     log += str(year) + '.' + str(month) + '.' + str(day) + ' ' + str(hour) + ';' + str(minute) + ';' + str(seconds) + ').txt'
     return log
 
-    
-file_name = logName()
-loggs = open(file_name, "w")
-loggs.close()
+def main():    
+    global file_name
+    file_name = logName()
+    loggs = open(file_name, "w")
+    loggs.close()
 
-try:
-    sendAdmin('Bot starts')
-    bot.polling()
-except Exception as err:
-    printLog(str(err))
+    try:
+        sendAdmin('Bot starts')
+        bot.polling()
+    except Exception as err:
+        printLog(str(err))
+
+
+if __name__ == '__main__':
+    main()

@@ -368,7 +368,20 @@ def use(message): #should be remake
     text = ('пиши @antonsa')
     bot.send_message(id, text)
 
+    
+@bot.message_handler(commands=['status'], func=fromAdmin)
+def status(message):
+    if GAME is None:
+        bot.send_message(message.chat.id, 'Stopped')
+    else:
+        bot.send_message(message.chat.id, 'In process')
 
+        
+@bot.message_handler(commands=['players'], func=fromAdmin)
+def composition(message):
+    bot.send_message(message.chat.id, playersList())
+        
+        
 @bot.message_handler(commands=['end'])
 def gameEnd(message = None): #think is new
     if message is None:
@@ -536,11 +549,12 @@ def logName():
     return log
 
 def main():    
-    global file_name
+    global file_name, GAME, players
     file_name = logName()
     loggs = open(file_name, "w")
     loggs.close()
-
+    GAME = None
+    players = []
     try:
         sendAdmin('Bot starts')
         bot.polling()

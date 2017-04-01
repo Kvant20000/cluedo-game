@@ -23,6 +23,7 @@ class Game():
     gameList = [{'name' : 'cluedo V2', 'bot' : '@cluedo_agent_bot', 'status' : 'stopped'}, 
                 {'name' : 'cluedo V1', 'bot' : '@try_masha_bot', 'status' : 'stopped'}]
     games = {'cluedo' : 'stopped'}
+    ids = {'cluedo' : 303602093}
     def __init__(self):
         pass
     
@@ -47,19 +48,30 @@ def help(message):
 @bot.message_handler(commands=['cluedo'], func=fromAdmin)
 def startCluedo(message):
     print(message.text)
-    sendAdmin(str(message.chat.id) + ' starts cluedo main bot')
-    ourGames.gameList[0]['status'] = 'running'
-    ourGames.games['cluedo'] = 'running'
-    
-    try:
-        cluedo_main.main()
-    except:
-        sendAdmin('Cluedo main bot falls down')
-    sendAdmin('Cluedo main bot ends')
-    ourGames.gameList[0]['status'] = 'stopped'
-    ourGames.games['cluedo'] = 'stopped'
-
-    
+    if message.text == '/cluedo':
+        status(message)
+        return 
+    else:
+        action = message.text.replace('/cluedo ', '')
+        if action == 'start':
+            sendAdmin(str(message.chat.id) + ' starts cluedo main bot')
+            ourGames.gameList[0]['status'] = 'running'
+            ourGames.games['cluedo'] = 'running'
+            
+            try:
+                cluedo_main.main()
+            except:
+                sendAdmin('Cluedo main bot falls down')
+            sendAdmin('Cluedo main bot ends')
+            ourGames.gameList[0]['status'] = 'stopped'
+            ourGames.games['cluedo'] = 'stopped'
+        elif action == 'stop':
+            if ourGames.games['cluedo'] == 'running':
+                bot.send_message(ourGames.ids['cluedo'], '/full_end')
+            else:
+                bot.send_message(message.chat.id, 'Already stopped')
+            
+            
 @bot.message_handler(commands=['status'], func=fromAdmin)
 def status(message):
     if message.text == '/status':
@@ -74,7 +86,7 @@ def status(message):
 @bot.message_handler(commands=['full_end'])
 def botEnd(message = None): #new
     if not (message.chat.id in AdminId):
-        bot.send_message(message.chat.id, "Отказано в доступе!")
+        bot.send_message(message.chat.id, "Access denied!")
         return
     else:
         sendAdmin('Admin bot ends')

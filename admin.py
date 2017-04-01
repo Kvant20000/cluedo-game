@@ -70,7 +70,17 @@ def status(message):
         bot.send_message(message.chat.id, ourGames.games[gm])
     except:
         bot.send_message(message.chat.id, 'No such game')
-    
+
+@bot.message_handler(commands=['full_end'])
+def botEnd(message = None): #new
+    if not (message.chat.id in AdminId):
+        bot.send_message(message.chat.id, "Отказано в доступе!")
+        return
+    else:
+        sendAdmin('Admin bot ends')
+        print('full end')
+        exit(0)
+        
 @bot.message_handler()
 def other(message):
     print(message.text, 'from', message.chat.username)

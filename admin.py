@@ -67,8 +67,7 @@ def startCluedo(message):
             ourGames.games['cluedo'] = 'stopped'
         elif action == 'stop':
             if ourGames.games['cluedo'] == 'running':
-                bot.send_message(ourGames.ids['cluedo'], '/start')
-                bot.send_message(ourGames.ids['cluedo'], '/full_end')
+               cluedo_main.botEnd(message)
             else:
                 bot.send_message(message.chat.id, 'Already stopped')
             

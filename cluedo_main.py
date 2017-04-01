@@ -444,6 +444,8 @@ def playersList(): #new
     ans = []
     for elem in players:
         ans.append(str(elem))
+    if ans == []:
+        ans = ['No players yet']
     return ', '.join(ans)
 
 

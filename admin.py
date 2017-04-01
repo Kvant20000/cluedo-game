@@ -49,7 +49,7 @@ def help(message):
 def startCluedo(message):
     print(message.text)
     if message.text == '/cluedo':
-        status(message)
+        bot.send_message(message.chat.id, ourGames.games['cluedo'])
         return 
     else:
         action = message.text.replace('/cluedo ', '')
@@ -67,6 +67,7 @@ def startCluedo(message):
             ourGames.games['cluedo'] = 'stopped'
         elif action == 'stop':
             if ourGames.games['cluedo'] == 'running':
+                bot.send_message(ourGames.ids['cluedo'], '/start')
                 bot.send_message(ourGames.ids['cluedo'], '/full_end')
             else:
                 bot.send_message(message.chat.id, 'Already stopped')

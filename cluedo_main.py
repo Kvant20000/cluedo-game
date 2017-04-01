@@ -377,7 +377,7 @@ def status(message):
         bot.send_message(message.chat.id, 'In process')
 
         
-@bot.message_handler(commands=['players'], func=fromAdmin)
+@bot.message_handler(commands=['players'])
 def composition(message):
     bot.send_message(message.chat.id, playersList())
         

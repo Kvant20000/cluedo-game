@@ -97,6 +97,7 @@ def botEnd(message = None): #new
 def update_bot(message):
     os.system('git pull')
     sendAdmin('Git pull complete, restarting bot...')
+    bot.send_message(message.chat.id, 'add')
     os.system('screen python3 admin.py')
         
 @bot.message_handler()

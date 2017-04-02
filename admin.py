@@ -109,9 +109,25 @@ def sendAdmin(text): #new
         bot.send_message(admin.id, 'Admin {0} {1}: '.format(admin.first_name, admin.last_name) + text).wait()
     
 #other function
-
-
-ourGames = Game()    
-sendAdmin('Admin bot starts')
-bot.polling()
-sendAdmin('Admin bot ends')
+def logName():
+    log = "Admin logs("
+    today = time.gmtime()
+    year = str(today.tm_year)
+    month = str(today.tm_mon)
+    day = str(today.tm_mday)
+    hour = str(today.tm_hour)
+    minute = str(today.tm_min)
+    seconds = str(today.tm_sec)
+    log += str(year) + '.' + str(month) + '.' + str(day) + ' ' + str(hour) + ';' + str(minute) + ';' + str(seconds) + ').txt'
+    return log
+    
+    
+try:
+    ourGames = Game()    
+    sendAdmin('Admin bot starts')
+    bot.polling()
+    sendAdmin('Admin bot ends')
+except Exception as err:
+    logAdmin = open(logName(), 'w')
+    print(str(err), file = logAdmin)
+    logAdmin.close()

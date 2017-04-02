@@ -20,8 +20,7 @@ bot = telebot.TeleBot(TOKEN)
 
 class Game():
     titles = ['cluedo V1', 'cluedo V2']
-    gameList = [{'name' : 'cluedo V2', 'bot' : '@cluedo_agent_bot', 'status' : 'stopped'}, 
-                {'name' : 'cluedo V1', 'bot' : '@try_masha_bot', 'status' : 'stopped'}]
+    gameList = [{'name' : 'cluedo V2', 'bot' : '@cluedo_agent_bot', 'status' : 'stopped'}]
     games = {'cluedo' : 'stopped'}
     ids = {'cluedo' : 303602093}
     def __init__(self):

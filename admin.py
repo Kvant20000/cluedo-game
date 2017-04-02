@@ -41,14 +41,14 @@ def help(message):
     id = message.chat.id
     bot.send_message("List of Antons' games")
     for game in gameList:
-        bot.send_message(id, game['name'] + ': ' + game['bot'])
+        bot.send_message(id, game['name'] + ': ' + game['bot']).wait()
 
         
 @bot.message_handler(commands=['cluedo'], func=fromAdmin)
 def startCluedo(message):
     print(message.text)
     if message.text == '/cluedo':
-        bot.send_message(message.chat.id, ourGames.games['cluedo'])
+        bot.send_message(message.chat.id, ourGames.games['cluedo']).wait()
         return 
     else:
         action = message.text.replace('/cluedo ', '')
@@ -61,6 +61,7 @@ def startCluedo(message):
                 cluedo_main.main()
             except:
                 sendAdmin('Cluedo main bot falls down')
+                
             sendAdmin('Cluedo main bot ends')
             ourGames.gameList[0]['status'] = 'stopped'
             ourGames.games['cluedo'] = 'stopped'
@@ -78,14 +79,14 @@ def status(message):
         return
     try:
         gm = message.text.replace('/status ', '')
-        bot.send_message(message.chat.id, ourGames.games[gm])
+        bot.send_message(message.chat.id, ourGames.games[gm]).wait()
     except:
-        bot.send_message(message.chat.id, 'No such game')
+        bot.send_message(message.chat.id, 'No such game').wait()
 
 @bot.message_handler(commands=['full_end'])
 def botEnd(message = None): #new
     if not (message.chat.id in AdminId):
-        bot.send_message(message.chat.id, "Access denied!")
+        bot.send_message(message.chat.id, "Access denied!").wait()
         return
     else:
         sendAdmin('Admin bot ends')
@@ -105,7 +106,7 @@ def other(message):
 #send function    
 def sendAdmin(text): #new
     for admin in Admins:
-        bot.send_message(admin.id, 'Admin {0} {1}: '.format(admin.first_name, admin.last_name) + text)
+        bot.send_message(admin.id, 'Admin {0} {1}: '.format(admin.first_name, admin.last_name) + text).wait()
     
 #other function
 

@@ -43,9 +43,9 @@ class Player:
             self.username = User.username
             self.first_name = User.first_name
             self.last_name = User.last_name
-        
+
         self.check()
-        
+
     def __str__(self):
         if str(self.username) == '':
             return str(self.first_name) + ' ' + str(self.last_name)
@@ -59,34 +59,34 @@ class Player:
             self.first_name = ''
         if self.last_name is None:
             self.last_name = ''
-    
+
     def setUser(self, User):
         self.user = User
         self.id = User.id
         self.username = User.username
         self.first_name = User.first_name
         self.last_name = User.last_name
-    
+
     def setNumber(self, num):
         self.number = num
-    
+
     def setCards(self, cards):
         self.cards = deepcopy(cards)
         self.know = set(cards)
-    
+
     def addCards(self, card):
         self.know.add(card)
-    
+
     def cardsInHand(self):
-        return ', '.join(self.cards) 
-    
+        return ', '.join(self.cards)
+
     def knownCards(self):
         return self.know
-    
+
     def data(self):
         return self.cards + [self.username, self.id]
 
-        
+
 class Game:
     def __init__(self, n):  # n players
         self.now = 0
@@ -99,7 +99,7 @@ class Game:
         self.won = False
         self.now = 0
         self.asked = False
-        
+
         deck = people + weapons + places
         for i in self.ans:
             deck.remove(i)
@@ -110,12 +110,12 @@ class Game:
         for i in range(n):
             players[i].setCards(deck[am_open[n] + i * am_per_player: am_open[n] + i * am_per_player + am_per_player])
         printLog(players[i].cards)
-    
+
     def numberById(id):
         for elem in players:
             if elem.id == id:
                 return elem.number
-    
+
 
     def who_killed(self):
         return self.ans
@@ -125,57 +125,67 @@ class Game:
         if s == 'Открытые карты: ':
             s = 'Открытых карт нет'
         return s
-    
+
     def keyboard(self, cards = True, ask = True, accuse = True, finish = True):
         keys = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=False)
         if cards:
             keys.row(telebot.types.KeyboardButton('Карты'))
-            
+
         if ask and accuse:
             keys.row(telebot.types.KeyboardButton('Спросить'), telebot.types.KeyboardButton('Обвинить'))
         elif ask:
             keys.row(telebot.types.KeyboardButton('Спросить'))
         elif accuse:
             keys.row(telebot.types.KeyboardButton('Обвинить'))
-        
+
         if finish:
             keys.row(telebot.types.KeyboardButton('Закончить'))
         return keys
-        
+
     def game(self):
         global my_ans, now_chosen
         send_all('Сейчас играют :\n' + playersList())
         sendAdmin('Сейчас играют :\n' + playersList())
-        
+
         while not self.won:
             while not players[self.now].alive:
                 self.now = (self.now + 1) % self.n
-            
-            
+
+
             send_turn(players[self.now])
             bot.send_message(players[self.now].id, 'Выберите действие:', reply_markup=self.keyboard())
-            
+
             my_ans = ''
             self.won = self.turn()
-            
+
             my_ans = ''
             self.now = (self.now + 1) % self.n
             self.asked = False
-        return    
-        
+        return
+
     def turn(self):
         global my_ans
-        
+
         while True:
+            value = dice()
+
+            can_go = []
+            for place in places:
+                if dist(curr_place[players[self.now].id], place) <= value:
+                    can_go += [place]
+
+            if len(can_go) == 0:
+                my_ans = 'Закончить'
+
             if my_ans == 'Закончить':
                 my_ans = ''
                 return False
-                
+
             if my_ans == 'Карты':
                 self.printCards()
                 my_ans = ''
                 bot.send_message(players[self.now].id, 'Выберите действие:', reply_markup=self.keyboard())
-                
+
             if my_ans == 'Спросить':
                 if not self.asked:
                     choice = self.ask()
@@ -190,15 +200,15 @@ class Game:
                     bot.send_message(players[self.now].id, "Вы уже спрашивали")
                     my_ans = ''
                     bot.send_message(players[self.now].id, 'Выберите действие:', reply_markup=self.keyboard())
-                
+
             if my_ans == 'Обвинить':
                 choice = self.accuse()
                 bot.send_message(players[self.now].id, "Your choice is: " + ', '.join(choice))
                 flag = self.checking(choice)
                 return flag
-                
+
         return False
-        
+
     def printCards(self):
         print('cards')
         pl = players[self.now]
@@ -211,9 +221,9 @@ class Game:
         text[5] += ', '.join(list(set(weapons).difference(pl.know)))
         text[6] += ', '.join(list(set(places).difference(pl.know)))
         bot.send_message(pl.id, '\n'.join(text))
-        return    
-        
-    
+        return
+
+
     def ask(self):
         global now_chosen
         now_chosen = []
@@ -227,7 +237,7 @@ class Game:
         while len(now_chosen) != 3:
             pass
         return now_chosen
-        
+
     def accuse(self):
         global now_chosen
         now_chosen = []
@@ -242,8 +252,8 @@ class Game:
         while len(now_chosen) != 3:
             pass
         return now_chosen
-    
-    
+
+
     def checking(self, ans):
         if check_ans(ans):
             bot.send_photo(players[self.now].id, open('win.png', 'rb'))
@@ -257,7 +267,7 @@ class Game:
             send_all(str(players[self.now]) + " обвинил: " + ', '.join(ans))
             send_all(str(players[self.now]) + " не угадал! Он вышел из игры!")
             bot.send_message(players[self.now].id, "Правильный ответ: " + ', '.join(self.who_killed()))
-            
+
         if self.alive == 1:
             for i in range(self.n):
                 pl = players[i]
@@ -294,16 +304,16 @@ who = -1
 #    print(message.text)
 def fromAdmin(message):
     return message.chat.id in AdminId
-    
+
 
 @bot.message_handler(commands=['join'])
 def get_players(message): #new
     if GAME is not None:
         bot.send_message(message.chat.id, "Игра уже началась")
         return
-        
+
     global players
-    
+
     id = message.chat.id
     name = message.chat.username
     user = telebot.types.User(id = id, username = name, first_name = message.chat.first_name, last_name = message.chat.last_name)
@@ -320,7 +330,7 @@ def get_players(message): #new
         return
     printLog(playersList())
 
-    
+
 @bot.message_handler(commands=['game'], func=fromAdmin)
 def start_game(message): #new
     global GAME, active
@@ -329,12 +339,12 @@ def start_game(message): #new
     else:
         sendAdmin('Игра начинается')
         active = [True] * len(players)
-        
+
         send_all('Карты в игре')
         send_all('Кто :' + ', '.join(people))
         send_all('Чем :' + ', '.join(weapons))
         send_all('Где :' + ', '.join(places))
-        
+
         rd.shuffle(players)
         GAME = Game(len(players))
         place = 0
@@ -343,17 +353,17 @@ def start_game(message): #new
             for card in GAME.opencards:
                 players[i].addCards(card)
             place += 1
-            
-            
+
+
         for player in players:
             cards = str(GAME)
             bot.send_message(player.id, cards)
             bot.send_message(player.id, 'Ваши карты: ' + player.cardsInHand())
-        
+
         GAME.game()
         gameEnd()
-        
-        
+
+
 @bot.message_handler(commands=['help', 'start'])
 def helpMessege(message): #should be remake
     #printLog('help from ' + str(message.chat.id))
@@ -368,7 +378,7 @@ def use(message): #should be remake
     text = ('пиши @antonsa')
     bot.send_message(id, text)
 
-    
+
 @bot.message_handler(commands=['status'], func=fromAdmin)
 def status(message):
     if GAME is None:
@@ -376,12 +386,12 @@ def status(message):
     else:
         bot.send_message(message.chat.id, 'In process')
 
-        
+
 @bot.message_handler(commands=['players'])
 def composition(message):
     bot.send_message(message.chat.id, playersList())
-        
-        
+
+
 @bot.message_handler(commands=['end'])
 def gameEnd(message = None): #think is new
     if message is None:
@@ -415,12 +425,12 @@ def catch(message): #new
     global now_chosen, my_ans, who
     if GAME is None:
         return
-        
+
     if not (message.chat.id == players[GAME.now].id or message.chat.id == players[who].id):
         return
-    
+
     text = message.text
-    
+
     if text in ['Карты', 'Спросить', 'Обвинить', 'Закончить'] and message.chat.id == players[GAME.now].id:
         my_ans = text
         return
@@ -439,7 +449,7 @@ def end(): #new
     GAME = None
     players = []
 
-    
+
 def playersList(): #new
     ans = []
     for elem in players:
@@ -466,8 +476,8 @@ def make(arr, one_time = True): #new
     elif d == 2:
         now.row(telebot.types.KeyboardButton(arr[i + 0]), telebot.types.KeyboardButton(arr[i + 1]))
         return now
-    
-    
+
+
 def go(index): #think is new
     global my_ans, who
     my_ans = ''
@@ -484,7 +494,7 @@ def go(index): #think is new
 
 def answer(man): #think is new
     global my_ans, who
-    
+
     who = man
     id = players[man].id
     Pl = players[man]
@@ -504,14 +514,14 @@ def answer(man): #think is new
         bot.send_message(id, "Выберите ответ: ", reply_markup=make(list(inter)))
         while len(my_ans) == 0:
             pass
-        return True    
-    
+        return True
+
 def hasPlayer(pl): #new
     for elem in players:
         if elem.id == pl.id:
             return True
     return False
-    
+
 
 def check_ans(arr): #new
     return sorted(GAME.who_killed()) == sorted(arr)
@@ -552,8 +562,8 @@ def logName():
 
 def dice():
     return rd.randrange(1, 7) + rd.randrange(1, 7)
-    
-def main():    
+
+def main():
     global file_name, GAME, players
     file_name = logName()
     loggs = open(file_name, "w")

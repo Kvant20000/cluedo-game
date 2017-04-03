@@ -242,10 +242,10 @@ class Game:
         bot.send_message(players[self.now].id, "Выберите персонажа: ", reply_markup=make(people))
         while len(now_chosen) != 1:
             pass
-        now_chosen.append(players[self.now].place)
-        bot.send_message(players[self.now].id, "Выберите место: ", reply_markup=make(places))
-        while len(now_chosen) != 3:
+        bot.send_message(players[self.now].id, "Выберите оружие: ", reply_markup=make(weapons))
+        while len(now_chosen) != 2:
             pass
+        now_chosen.append(players[self.now].place)
         return now_chosen
 
     def accuse(self):

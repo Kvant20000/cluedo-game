@@ -183,6 +183,7 @@ class Game:
             while my_ans == '':
                 pass
             players[self.now].place = my_ans
+            self.choose_place = False
         
         my_ans = ''
         bot.send_message(players[self.now].id, 'Выберите действие:', reply_markup=self.keyboard())

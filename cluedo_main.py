@@ -95,12 +95,12 @@ class Game:
         self.d = dict()
         self.full = False
         self.max_players = 6
-        self.ans = (rd.choice(people), rd.choice(weapons), rd.choice(places))  # the answer
+        self.ans = (rd.choice(people), rd.choice(weapons), rd.choice(places[:-1]))  # the answer
         self.won = False
         self.now = 0
         self.asked = False
 
-        deck = people + weapons + places
+        deck = people + weapons + places[:-1]
         for i in self.ans:
             deck.remove(i)
         rd.shuffle(deck)  # so i shuffled
@@ -153,7 +153,6 @@ class Game:
 
 
             send_turn(players[self.now])
-            bot.send_message(players[self.now].id, 'Выберите действие:', reply_markup=self.keyboard())
 
             my_ans = ''
             self.won = self.turn()
@@ -378,7 +377,7 @@ def start_game(message): #new
 @bot.message_handler(commands=['help', 'start'])
 def helpMessege(message): #should be remake
     #printLog('help from ' + str(message.chat.id))
-    text = ('/help - чтобы снова увидеть это сообщение\nвсё остальное спрашивать у @antonsa')
+    text = ('/help - чтобы снова увидеть это сообщение\n/join - присоедениться к игре\nвсё остальное спрашивать у @antonsa')
     bot.send_message(message.chat.id, text)
 
 
@@ -516,7 +515,6 @@ def answer(man): #think is new
     now = set(now_chosen)
     inter = now.intersection(cards)
 
-    print(inter)
 
     if len(inter) == 0:
         bot.send_message(id, "Выберите ответ: ", reply_markup=make(['НЕТ']))

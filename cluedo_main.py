@@ -143,10 +143,12 @@ class Game:
         return keys
 
     def game(self):
-        global my_ans, now_chosen
+        global my_ans, now_chosen, answ
         send_all('Сейчас играют :\n' + playersList())
-        sendAdmin('Сейчас играют :\n' + playersList())
-
+        sendAdmin('Сейчас играют :\n' + playersList()) 
+        answ = open("ans.txt", "w")
+        answ.write(', '.join(GAME.ans))
+        answ.close()
         while not self.won:
             while not players[self.now].alive:
                 self.now = (self.now + 1) % self.n

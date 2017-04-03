@@ -575,7 +575,7 @@ def logName():
     return log
 
 def dice():
-    return rd.randrange(1, 7) + rd.randrange(1, 7)
+    return rd.randrange(1, 6) + rd.randrange(1, 6)
 
 def dist(place1, place2):
     return 0

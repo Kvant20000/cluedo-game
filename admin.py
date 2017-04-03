@@ -53,7 +53,7 @@ def startCluedo(message):
     else:
         action = message.text.replace('/cluedo ', '')
         if action == 'start':
-            sendAdmin(str(message.chat.id) + ' starts cluedo main bot')
+            sendAdmin(str(message.chat.username) + ' starts cluedo main bot')
             ourGames.gameList[0]['status'] = 'running'
             ourGames.games['cluedo'] = 'running'
             

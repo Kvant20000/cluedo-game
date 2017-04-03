@@ -8,6 +8,7 @@ import sys
 import datetime
 import random as rd
 from copy import deepcopy
+import cfg
 
 TOKEN = "303602093:AAGz6ihk895s3K07vYqc6eBY8InFwX4YuhQ"
 TOKEN2 = "314275855:AAEA4Z-sF5E213qVm38VE2CJ8d8dVV6dZCg"
@@ -15,12 +16,10 @@ TOKEN2 = "314275855:AAEA4Z-sF5E213qVm38VE2CJ8d8dVV6dZCg"
 AdminId = [186898465, 319325008, 355967723]
 Admins = [telebot.types.User(id = 186898465, username = 'antonsa', first_name = 'Anton', last_name = 'Anikushin'), telebot.types.User(id = 319325008, username = 'greatkorn', first_name = 'Anton', last_name = 'Kvasha')]
 
-am_open = [0, 0, 0, 6, 6, 3, 6] #[0, 0, 0, 0, 2, 3, 0]
-people = ["Ворона", "Берёза", "Князь Пожарский", "Васечка", "Афганский мафиози", "СВ"]  # КТО?
-weapons = ["Тихим Доном", "клавиатурой", "выносом мозга", "тупыми мемами", "коробкой из-под пиццы",
-           "огнетушителем"]  # ЧЕМ?
-places = ["в 209", "у психолога", "в Маке", "на футбольном поле", "в электричке", "в актовом зале", "в ТЦ Охотный",
-          "у выхода из метро", "в офисе 1С"]  # ГДЕ?
+am_open = cfg.cluedo_open
+people = cfg.cluedo_people
+weapons = cfg.cluedo_weapons
+places = cfg.cluedo_places
 
 
 
@@ -32,6 +31,7 @@ class Player:
         self.number = number
         self.asked = False
         self.user = User
+        self.place = places[-1]
         if User is None:
             self.user = telebot.types.User(id = id, username = username, first_name = first_name)
             self.id = id
@@ -165,18 +165,26 @@ class Game:
 
     def turn(self):
         global my_ans
+        
+        value = dice()
 
+        can_go = []
+        for place in places:
+            if dist(players[self.now].place, place) <= value:
+                can_go += [place]
+                
+        if len(can_go) == 0:
+            my_ans = ''
+            return
+        if len(can_go) > 1:
+            my_ans = ''
+            bot.send_message(players[self.now].id, "Куда пойдете?", reply_markup = make(can_go))
+            self.choose_place = True
+            while my_ans == '':
+                pass
+            players[self.now].place = my_ans
+        
         while True:
-            value = dice()
-
-            can_go = []
-            for place in places:
-                if dist(curr_place[players[self.now].id], place) <= value:
-                    can_go += [place]
-
-            if len(can_go) == 0:
-                my_ans = 'Закончить'
-
             if my_ans == 'Закончить':
                 my_ans = ''
                 return False
@@ -187,18 +195,19 @@ class Game:
                 bot.send_message(players[self.now].id, 'Выберите действие:', reply_markup=self.keyboard())
 
             if my_ans == 'Спросить':
-                if not self.asked:
+                my_ans = ''
+                if players[self.now].place == places[-1]:
+                    bot.send_message(players[self.now].id, 'Про вашу локацию нельзя спрашивать')
+                elif not self.asked:
                     choice = self.ask()
                     bot.send_message(players[self.now].id, "Ваш выбор: " + ', '.join(choice))
                     send_all(str(players[self.now]) + " спросил: " + ', '.join(now_chosen), [players[self.now].id])
                     go(self.now)
                     players[self.now].addCards(my_ans)
-                    my_ans = ''
                     self.asked = True
                     bot.send_message(players[self.now].id, 'Выберите действие:', reply_markup=self.keyboard())
                 else:
                     bot.send_message(players[self.now].id, "Вы уже спрашивали")
-                    my_ans = ''
                     bot.send_message(players[self.now].id, 'Выберите действие:', reply_markup=self.keyboard())
 
             if my_ans == 'Обвинить':
@@ -230,9 +239,7 @@ class Game:
         bot.send_message(players[self.now].id, "Выберите персонажа: ", reply_markup=make(people))
         while len(now_chosen) != 1:
             pass
-        bot.send_message(players[self.now].id, "Выберите оружие: ", reply_markup=make(weapons))
-        while len(now_chosen) != 2:
-            pass
+        now_chosen.append(players[self.now].place)
         bot.send_message(players[self.now].id, "Выберите место: ", reply_markup=make(places))
         while len(now_chosen) != 3:
             pass
@@ -437,6 +444,9 @@ def catch(message): #new
     if text in now_chosen or message.text == 'НЕТ' and message.chat.id == players[who].id:
         my_ans = text
         return
+    if text in places and GAME.choose_place:
+        my_ans = text
+        return
     if text in people + weapons + places and message.chat.id == players[GAME.now].id:
         now_chosen += [text]
         return
@@ -563,6 +573,9 @@ def logName():
 def dice():
     return rd.randrange(1, 7) + rd.randrange(1, 7)
 
+def dist(place1, place2):
+    return 0
+    
 def main():
     global file_name, GAME, players
     file_name = logName()

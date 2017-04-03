@@ -550,6 +550,9 @@ def logName():
     log += str(year) + '.' + str(month) + '.' + str(day) + ' ' + str(hour) + ';' + str(minute) + ';' + str(seconds) + ').txt'
     return log
 
+def dice():
+    return rd.randrange(1, 7) + rd.randrange(1, 7)
+    
 def main():    
     global file_name, GAME, players
     file_name = logName()

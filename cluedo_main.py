@@ -146,9 +146,6 @@ class Game:
         global my_ans, now_chosen, answ
         send_all('Сейчас играют :\n' + playersList())
         sendAdmin('Сейчас играют :\n' + playersList()) 
-        answ = open("ans.txt", "w")
-        answ.write(', '.join(GAME.ans))
-        answ.close()
         while not self.won:
             while not players[self.now].alive:
                 self.now = (self.now + 1) % self.n
@@ -575,7 +572,7 @@ def logName():
     return log
 
 def dice():
-    return rd.randrange(1, 6) + rd.randrange(1, 6)
+    return rd.randrange(1, 7) + rd.randrange(1, 7)
 
 def dist(place1, place2):
     return 0

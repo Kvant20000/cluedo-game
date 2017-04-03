@@ -127,7 +127,7 @@ class Game:
         return s
 
     def keyboard(self, cards = True, ask = True, accuse = True, finish = True):
-        keys = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=False)
+        keys = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
         if cards:
             keys.row(telebot.types.KeyboardButton('Карты'))
 
@@ -183,6 +183,9 @@ class Game:
             while my_ans == '':
                 pass
             players[self.now].place = my_ans
+        
+        my_ans = ''
+        bot.send_message(players[self.now].id, 'Выберите действие:', reply_markup=self.keyboard())
         
         while True:
             if my_ans == 'Закончить':

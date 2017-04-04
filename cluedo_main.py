@@ -31,7 +31,7 @@ class Player:
         self.number = number
         self.asked = False
         self.user = User
-        self.place = places[-1]
+        self.place = rd.choice(places)
         if User is None:
             self.user = telebot.types.User(id = id, username = username, first_name = first_name)
             self.id = id
@@ -198,9 +198,9 @@ class Game:
 
             if my_ans == 'Ask':
                 my_ans = ''
-                if players[self.now].place == places[-1]:
-                    bot.send_message(players[self.now].id, 'Your location is bad for your health. Personally, I recommend Nepal.')
-                elif not self.asked:
+                #if players[self.now].place == places[-1]:
+                #    bot.send_message(players[self.now].id, 'Your location is bad for your health. Personally, I recommend Nepal.')
+                if not self.asked:
                     choice = self.ask()
                     bot.send_message(players[self.now].id, "Your choice is: " + ', '.join(choice))
                     send_all(str(players[self.now]) + " has asked: " + ', '.join(now_chosen), [players[self.now].id])

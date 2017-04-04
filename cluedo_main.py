@@ -16,6 +16,7 @@ TOKEN2 = "314275855:AAEA4Z-sF5E213qVm38VE2CJ8d8dVV6dZCg"
 AdminId = [186898465, 319325008, 355967723]
 Admins = [telebot.types.User(id = 186898465, username = 'antonsa', first_name = 'Anton', last_name = 'Anikushin'), telebot.types.User(id = 319325008, username = 'greatkorn', first_name = 'Anton', last_name = 'Kvasha')]
 
+cfg.cluedo_init()
 am_open = cfg.cluedo_open
 people = cfg.cluedo_people
 weapons = cfg.cluedo_weapons
@@ -191,7 +192,7 @@ class Game:
                 my_ans = ''
                 return False
 
-            if my_ans == 'cards':
+            if my_ans == 'Сards':
                 self.printCards()
                 my_ans = ''
                 bot.send_message(players[self.now].id, 'Choose an action:', reply_markup=self.keyboard())
@@ -342,10 +343,15 @@ def get_players(message): #new
 
 @bot.message_handler(commands=['game'], func=fromAdmin)
 def start_game(message): #new
-    global GAME, active
+    global GAME, active, people, weapons, places
     if GAME is not None:
         bot.send_message(message.chat.id, "The game has already started.")
     else:
+        cfg.cluedo_init()
+        people = cfg.cluedo_people
+        weapons = cfg.cluedo_weapons
+        places = cfg.cluedo_places
+        
         sendAdmin('The game is starting')
         active = [True] * len(players)
 
@@ -575,7 +581,7 @@ def dice():
     return rd.randrange(1, 7) + rd.randrange(1, 7)
 
 def dist(place1, place2):
-    return 0
+    return rd.randrange(1, 12)
     
 def main():
     global file_name, GAME, players

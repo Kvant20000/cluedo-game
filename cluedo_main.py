@@ -222,7 +222,6 @@ class Game:
         return False
 
     def printCards(self):
-        print('Cards') # OMG WTF SRSLY?! 
         pl = players[self.now]
         text = ['', '\n', '\n', '\n\nOther cards\n', 'People: ', 'Weapons: ', 'Places: ']
         text[0] += str(self)
@@ -317,7 +316,7 @@ def fromAdmin(message):
 
 
 @bot.message_handler(commands=['join'])
-def get_players(message): #new
+def get_players(message): 
     if GAME is not None:
         bot.send_message(message.chat.id, "The game has already started.") #how bout a slowpoke pic here???
         return
@@ -342,7 +341,7 @@ def get_players(message): #new
 
 
 @bot.message_handler(commands=['game'], func=fromAdmin)
-def start_game(message): #new
+def start_game(message): 
     global GAME, active, people, weapons, places
     if GAME is not None:
         bot.send_message(message.chat.id, "The game has already started.")
@@ -380,14 +379,14 @@ def start_game(message): #new
 
 
 @bot.message_handler(commands=['help', 'start'])
-def helpMessege(message): #should be remake #orden vam, anglyiskyi
+def helpMessege(message):
     #printLog('help from ' + str(message.chat.id))
     text = ('/help - see this message again\n/join - join the game\n @antonsa can tell you the rest')
     bot.send_message(message.chat.id, text)
 
 
 @bot.message_handler(commands=['how_use'])
-def use(message): #should be remake #i'm starting to run out of polite insults
+def use(message):
     #printLog('how use from ')
     id = message.chat.id
     text = ('ask @antonsa') #oh i will, believe me
@@ -408,7 +407,7 @@ def composition(message):
 
 
 @bot.message_handler(commands=['end'])
-def gameEnd(message = None): #think is new #think comments should be readable, Carl!
+def gameEnd(message = None):
     if message is None:
         send_all('Game over. Do you want to start a new game?')
         sendAdmin('Game over. Do you want to start a new game?')
@@ -423,7 +422,7 @@ def gameEnd(message = None): #think is new #think comments should be readable, C
 
 
 @bot.message_handler(commands=['full_end'])
-def botEnd(message = None): #new
+def botEnd(message = None): 
     if not (message.chat.id in AdminId):
         bot.send_message(message.chat.id, "Anton is a very big birch!")
         return
@@ -436,7 +435,7 @@ def botEnd(message = None): #new
 
 
 @bot.message_handler()
-def catch(message): #new
+def catch(message): 
     global now_chosen, my_ans, who
     if GAME is None:
         return
@@ -461,14 +460,14 @@ def catch(message): #new
     return
 
 
-def end(): #new
+def end(): 
     global players, GAME
     printLog('end of game\n-------------------------------------------------------\n\n')
     GAME = None
     players = []
 
 
-def playersList(): #new
+def playersList(): 
     ans = []
     for elem in players:
         ans.append(str(elem))
@@ -477,7 +476,7 @@ def playersList(): #new
     return ', '.join(ans)
 
 
-def make(arr, one_time = True): #new
+def make(arr, one_time = True):
     arr = list(arr)
     now = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=one_time)
     i = 0
@@ -496,7 +495,7 @@ def make(arr, one_time = True): #new
         return now
 
 
-def go(index): #think is new
+def go(index):
     global my_ans, who
     my_ans = ''
     man = (index + 1) % GAME.n
@@ -510,7 +509,7 @@ def go(index): #think is new
         send_all('Answered by ' + str(players[man]), [players[index].id, players[man].id])
     who = -1
 
-def answer(man): #think is new #think somebody needs his english lessons more than his afghani mafia
+def answer(man):
     global my_ans, who
 
     who = man
@@ -533,33 +532,33 @@ def answer(man): #think is new #think somebody needs his english lessons more th
             pass
         return True
 
-def hasPlayer(pl): #new
+def hasPlayer(pl):
     for elem in players:
         if elem.id == pl.id:
             return True
     return False
 
 
-def check_ans(arr): #new
+def check_ans(arr):
     return sorted(GAME.who_killed()) == sorted(arr)
 
 
-def send_all(msg, bad=[]): #new
+def send_all(msg, bad=[]):
     for player in players:
         if player.id not in bad:
             bot.send_message(player.id, msg)
     return
 
-def sendAdmin(text): #new
+def sendAdmin(text):
     for admin in Admins:
         bot.send_message(admin.id, 'Admin {0} {1}: '.format(admin.first_name, admin.last_name) + text)
 
-def send_turn(pl): #new
+def send_turn(pl):
     for player in players:
         bot.send_message(player.id, "Now it's " + str(pl) + "'s turn")
     return
 
-def printLog(text): #should be checked
+def printLog(text):
     global file_name
     logs = open(file_name, "a")
     logs.write(str(text) + '\n\n')

@@ -581,6 +581,8 @@ def dice():
     return rd.randrange(1, 7) + rd.randrange(1, 7)
 
 def dist(place1, place2):
+    if place1 == place2:
+        return 0
     return rd.randrange(1, 12)
     
 def main():

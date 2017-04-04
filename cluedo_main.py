@@ -192,7 +192,7 @@ class Game:
                 my_ans = ''
                 return False
 
-            if my_ans == 'Сards':
+            if my_ans == 'Cards':
                 self.printCards()
                 my_ans = ''
                 bot.send_message(players[self.now].id, 'Choose an action:', reply_markup=self.keyboard())
@@ -212,11 +212,14 @@ class Game:
                 else:
                     bot.send_message(players[self.now].id, "You have already asked")
                     bot.send_message(players[self.now].id, 'Choose an action:', reply_markup=self.keyboard())
+                my_ans = ''
 
             if my_ans == 'Accuse':
+                my_ans = ''
                 choice = self.accuse()
                 bot.send_message(players[self.now].id, "Your choice is: " + ', '.join(choice))
                 flag = self.checking(choice)
+                my_ans = ''
                 return flag
 
         return False

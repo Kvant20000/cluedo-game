@@ -53,18 +53,21 @@ def startCluedo(message):
     else:
         action = message.text.replace('/cluedo ', '')
         if action == 'start':
-            sendAdmin(str(message.chat.username) + ' starts cluedo main bot')
-            ourGames.gameList[0]['status'] = 'running'
-            ourGames.games['cluedo'] = 'running'
-            
-            try:
-                cluedo_main.main()
-            except:
-                sendAdmin('Cluedo main bot falls down')
+            if ourGames.games['cluedo'] == 'stopped':
+                sendAdmin(str(message.chat.username) + ' starts cluedo main bot')
+                ourGames.gameList[0]['status'] = 'running'
+                ourGames.games['cluedo'] = 'running'
                 
-            sendAdmin('Cluedo main bot ends')
-            ourGames.gameList[0]['status'] = 'stopped'
-            ourGames.games['cluedo'] = 'stopped'
+                try:
+                    cluedo_main.main()
+                except:
+                    sendAdmin('Cluedo main bot falls down')
+                    
+                sendAdmin('Cluedo main bot ends')
+                ourGames.gameList[0]['status'] = 'stopped'
+                ourGames.games['cluedo'] = 'stopped'
+            else:
+                bot.send_message(message.chat.id, 'Already running')
         elif action == 'stop':
             if ourGames.games['cluedo'] == 'running':
                cluedo_main.botEnd(message)

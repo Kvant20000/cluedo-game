@@ -96,12 +96,12 @@ class Game:
         self.d = dict()
         self.full = False
         self.max_players = 6
-        self.ans = (rd.choice(people), rd.choice(weapons), rd.choice(places[:-1]))  # the answer
+        self.ans = (rd.choice(people), rd.choice(weapons), rd.choice(places))  # the answer
         self.won = False
         self.now = 0
         self.asked = False
 
-        deck = people + weapons + places[:-1]
+        deck = people + weapons + places
         for i in self.ans:
             deck.remove(i)
         rd.shuffle(deck)  # so i shuffled

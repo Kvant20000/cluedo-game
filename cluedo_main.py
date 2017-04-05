@@ -398,7 +398,7 @@ def composition(message):
 
     
 @bot.message_handler(commands=['cards'])
-@bot.message_handler(func = lambda mes : message.text == 'Cards') 
+@bot.message_handler(func = lambda mes : mes.text == 'Cards') 
 def printCards(message):
     if GAME is None:
         bot.send_message(message.chat.id, "There is no game now")

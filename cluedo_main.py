@@ -175,6 +175,7 @@ class Game:
         if len(can_go) == 0:
             my_ans = ''
             return
+        bot.send_message(players[self.now].id, 'Now you are ' + players[self.now].place)
         if len(can_go) > 1:
             my_ans = ''
             bot.send_message(players[self.now].id, "Where will you go?", reply_markup = make(can_go))

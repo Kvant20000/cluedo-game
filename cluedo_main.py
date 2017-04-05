@@ -13,7 +13,7 @@ import cfg
 TOKEN = "303602093:AAGz6ihk895s3K07vYqc6eBY8InFwX4YuhQ"
 TOKEN2 = "314275855:AAEA4Z-sF5E213qVm38VE2CJ8d8dVV6dZCg"
 
-AdminId = [186898465, 319325008, 355967723]
+AdminId = [186898465, 319325008]
 Admins = [telebot.types.User(id = 186898465, username = 'antonsa', first_name = 'Anton', last_name = 'Anikushin'), telebot.types.User(id = 319325008, username = 'greatkorn', first_name = 'Anton', last_name = 'Kvasha')]
 
 cfg.cluedo_init()
@@ -116,7 +116,7 @@ class Game:
         for elem in players:
             if elem.id == id:
                 return elem.number
-
+        return None
 
     def who_killed(self):
         return self.ans
@@ -130,7 +130,7 @@ class Game:
     def keyboard(self, cards = True, ask = True, accuse = True, finish = True):
         keys = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
         if cards:
-            keys.row(telebot.types.KeyboardButton('Cards')) #My cards?
+            keys.row(telebot.types.KeyboardButton('Cards'))
 
         if ask and accuse:
             keys.row(telebot.types.KeyboardButton('Ask'), telebot.types.KeyboardButton('Accuse'))
@@ -225,20 +225,6 @@ class Game:
 
         return False
 
-    def printCards(self):
-        pl = players[self.now]
-        text = ['', '\n', '\n', '\n\nOther cards\n', 'People: ', 'Weapons: ', 'Places: ']
-        text[0] += str(self)
-        text[1] += 'Cards in your hand: ' + pl.cardsInHand()
-        text[2] += 'Cards you know: ' + ', '.join(list(pl.know.difference(set(pl.cards)).difference(self.opencards)))
-        text[3] += ''
-        text[4] += ', '.join(list(set(people).difference(pl.know)))
-        text[5] += ', '.join(list(set(weapons).difference(pl.know)))
-        text[6] += ', '.join(list(set(places).difference(pl.know)))
-        bot.send_message(pl.id, '\n'.join(text)) #my ex's code is neater
-        return
-
-
     def ask(self):
         global now_chosen
         now_chosen = []
@@ -320,7 +306,7 @@ def fromAdmin(message):
 
 
 @bot.message_handler(commands=['join'])
-def get_players(message): 
+def add_player(message): 
     if GAME is not None:
         bot.send_message(message.chat.id, "The game has already started.") #how bout a slowpoke pic here???
         return
@@ -368,6 +354,7 @@ def start_game(message):
         place = 0
         for i in range(len(players)):
             players[i].setNumber(place)
+            players[i].place = rd.choice(places)
             for card in GAME.opencards:
                 players[i].addCards(card)
             place += 1
@@ -409,7 +396,27 @@ def status(message):
 def composition(message):
     bot.send_message(message.chat.id, playersList())
 
+    
+@bot.message_handler(commands=['cards'])
+@bot.message_handler(func = lambda mes : message.text == 'Cards') 
+def printCards(message):
+        num = GAME.numberById(message.chat.id)
+        if num is None:
+            bot.send_message(message.chat.id, "You don't play")
+            return
+        pl = players[num]
+        text = ['', '\n', '\n', '\n\nOther cards\n', 'People: ', 'Weapons: ', 'Places: ']
+        text[0] += str(self)
+        text[1] += 'Cards in your hand: ' + pl.cardsInHand()
+        text[2] += 'Cards you know: ' + ', '.join(list(pl.know.difference(set(pl.cards)).difference(self.opencards)))
+        text[3] += ''
+        text[4] += ', '.join(list(set(people).difference(pl.know)))
+        text[5] += ', '.join(list(set(weapons).difference(pl.know)))
+        text[6] += ', '.join(list(set(places).difference(pl.know)))
+        bot.send_message(pl.id, '\n'.join(text)) #my ex's code is neater
+        return
 
+        
 @bot.message_handler(commands=['end'])
 def gameEnd(message = None):
     if message is None:

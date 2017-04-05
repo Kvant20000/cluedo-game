@@ -604,12 +604,9 @@ def main():
     loggs.close()
     GAME = None
     players = []
-    try:
-        sendAdmin('Bot starts')
-        bot.polling()
-    except Exception as err:
-        printLog(str(err))
-
+    sendAdmin('Bot starts')
+    bot.polling()
+    
 
 if __name__ == '__main__':
     main()

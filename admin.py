@@ -45,7 +45,7 @@ def help(message):
 
         
 @bot.message_handler(commands=['cluedo'], func=fromAdmin)
-def startCluedo(message):
+def cluedoGame(message):
     print(message.text)
     if message.text == '/cluedo':
         bot.send_message(message.chat.id, ourGames.games['cluedo'])
@@ -60,8 +60,8 @@ def startCluedo(message):
                 
                 try:
                     cluedo_main.main()
-                except:
-                    sendAdmin('Cluedo main bot falls down')
+                except Exception as err:
+                    sendAdmin('Cluedo main bot falls down ' + str(str))
                     
                 sendAdmin('Cluedo main bot ends')
                 ourGames.gameList[0]['status'] = 'stopped'

@@ -61,7 +61,7 @@ def cluedoGame(message):
                 try:
                     cluedo_main.main()
                 except Exception as err:
-                    sendAdmin('Cluedo main bot falls down ' + str(str))
+                    sendAdmin('Cluedo main bot falls down ' + str(err))
                     
                 sendAdmin('Cluedo main bot ends')
                 ourGames.gameList[0]['status'] = 'stopped'

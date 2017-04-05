@@ -400,24 +400,28 @@ def composition(message):
 @bot.message_handler(commands=['cards'])
 @bot.message_handler(func = lambda mes : mes.text == 'Cards') 
 def printCards(message):
-    if GAME is None:
-        bot.send_message(message.chat.id, "There is no game now")
-    num = GAME.numberById(message.chat.id)
-    if num is None:
-        bot.send_message(message.chat.id, "You don't play")
+    try:
+        if GAME is None:
+            bot.send_message(message.chat.id, "There is no game now")
+            return
+        num = GAME.numberById(message.chat.id)
+        if num is None:
+            bot.send_message(message.chat.id, "You don't play")
+            return
+        pl = players[num]
+        text = ['', '\n', '\n', '\n\nOther cards\n', 'People: ', 'Weapons: ', 'Places: ']
+        text[0] += str(self)
+        text[1] += 'Cards in your hand: ' + pl.cardsInHand()
+        text[2] += 'Cards you know: ' + ', '.join(list(pl.know.difference(set(pl.cards)).difference(self.opencards)))
+        text[3] += ''
+        text[4] += ', '.join(list(set(people).difference(pl.know)))
+        text[5] += ', '.join(list(set(weapons).difference(pl.know)))
+        text[6] += ', '.join(list(set(places).difference(pl.know)))
+        bot.send_message(pl.id, '\n'.join(text)) #my ex's code is neater
         return
-    pl = players[num]
-    text = ['', '\n', '\n', '\n\nOther cards\n', 'People: ', 'Weapons: ', 'Places: ']
-    text[0] += str(self)
-    text[1] += 'Cards in your hand: ' + pl.cardsInHand()
-    text[2] += 'Cards you know: ' + ', '.join(list(pl.know.difference(set(pl.cards)).difference(self.opencards)))
-    text[3] += ''
-    text[4] += ', '.join(list(set(people).difference(pl.know)))
-    text[5] += ', '.join(list(set(weapons).difference(pl.know)))
-    text[6] += ', '.join(list(set(places).difference(pl.know)))
-    bot.send_message(pl.id, '\n'.join(text)) #my ex's code is neater
-    return
-
+    except Exception as err:
+        bot.send_message(message.chat.id, 'Something goes bad')
+        sendAdmin(str(err))
         
 @bot.message_handler(commands=['end'])
 def gameEnd(message = None):

@@ -22,8 +22,7 @@ people = cfg.cluedo_people
 weapons = cfg.cluedo_weapons
 places = cfg.cluedo_places
 
-
-
+ 
 class Player:
     def __init__(self, cards = [], id = 186898465, username = 'antonsa', number = -1, first_name = 'Anton', last_name = 'Anikushin', User = None):
         self.cards = deepcopy(cards)
@@ -112,7 +111,7 @@ class Game:
             players[i].setCards(deck[am_open[n] + i * am_per_player: am_open[n] + i * am_per_player + am_per_player])
         printLog(players[i].cards)
 
-    def numberById(self, id):
+    def numberById(id):
         for elem in players:
             if elem.id == id:
                 return elem.number
@@ -145,8 +144,8 @@ class Game:
 
     def game(self):
         global my_ans, now_chosen, answ
-        send_all('Currently in game :\n' + playersList())
-        sendAdmin('Currently in game :\n' + playersList()) 
+        send_all('Currently in game: \n' + playersList())
+        sendAdmin('Currently in game: \n' + playersList()) 
         while not self.won:
             while not players[self.now].alive:
                 self.now = (self.now + 1) % self.n
@@ -205,7 +204,7 @@ class Game:
                 if not self.asked:
                     choice = self.ask()
                     bot.send_message(players[self.now].id, "Your choice is: " + ', '.join(choice))
-                    send_all(str(players[self.now]) + " has asked: Was the murder committed by " + ' '.join(now_chosen) + "?", [players[self.now].id])
+                    send_all(str(players[self.now]) + ": Was the murder committed by " + ' '.join(now_chosen) + "?", [players[self.now].id])
                     go(self.now)
                     players[self.now].addCards(my_ans)
                     self.asked = True
@@ -345,9 +344,9 @@ def start_game(message):
         active = [True] * len(players)
 
         send_all('Cards in game')
-        send_all('People :' + ', '.join(people))
-        send_all('Weapons :' + ', '.join(weapons))
-        send_all('Places :' + ', '.join(places))
+        send_all('People: ' + ', '.join(people))
+        send_all('Weapons: ' + ', '.join(weapons))
+        send_all('Places: ' + ', '.join(places))
 
         rd.shuffle(players)
         GAME = Game(len(players))
@@ -398,7 +397,7 @@ def composition(message):
 
     
 @bot.message_handler(commands=['cards'])
-@bot.message_handler(func = lambda mes : mes.text == 'Cards') 
+@bot.message_handler(func = lambda mes:  mes.text == 'Cards') 
 def printCards(message):
     try:
         if GAME is None:

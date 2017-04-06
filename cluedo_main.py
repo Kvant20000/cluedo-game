@@ -121,7 +121,7 @@ class Game:
         return s
 
     def keyboard(self, cards = True, ask = True, accuse = True, finish = True):
-        keys = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=False)
+        keys = telebot.types.ReplyKeyboardMarkup()
         if cards:
             keys.row(telebot.types.KeyboardButton('Cards'))
 

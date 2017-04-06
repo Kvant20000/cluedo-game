@@ -121,7 +121,7 @@ class Game:
         return s
 
     def keyboard(self, cards = True, ask = True, accuse = True, finish = True):
-        keys = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
+        keys = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=False)
         if cards:
             keys.row(telebot.types.KeyboardButton('Cards'))
 
@@ -185,11 +185,6 @@ class Game:
             if my_ans == 'End turn':
                 my_ans = ''
                 return False
-
-            if my_ans == 'Cards':
-                printCards(players[self.now].id)
-                my_ans = ''
-                bot.send_message(players[self.now].id, 'Choose an action:', reply_markup=self.keyboard())
 
             if my_ans == 'Ask':
                 my_ans = ''
@@ -309,10 +304,10 @@ def add_player(message):
 
     id = message.chat.id
     name = message.chat.username
-    user = telebot.types.User(id = id, username = name, first_name = message.chat.first_name, last_name = message.chat.last_name)
+    user = message.from_user
     pl = Player(User = user)
     if len(players) >= MAX_PLAYERS:
-        bot.send_message(id, "Sorry, there is no place for people like you in this game!") #Извените. Просто Извените
+        bot.send_message(id, "Sorry, there is no place for people like you in this game!")
         return
     elif not hasPlayer(pl):
         players.append(pl)

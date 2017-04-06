@@ -111,12 +111,6 @@ class Game:
             players[i].setCards(deck[am_open[n] + i * am_per_player: am_open[n] + i * am_per_player + am_per_player])
         printLog(players[i].cards)
 
-    def numberById(self, id):
-        for elem in players:
-            if elem.id == id:
-                return elem.number
-        return None
-
     def who_killed(self):
         return self.ans
 
@@ -403,7 +397,7 @@ def printCards(message):
         if GAME is None:
             bot.send_message(message.chat.id, "There is no game now")
             return
-        num = GAME.numberById(message.chat.id)
+        num = numberById(message.chat.id)
         if num is None:
             bot.send_message(message.chat.id, "You aren't playing")
             return
@@ -580,6 +574,13 @@ def printLog(text):
     logs.write(str(text) + '\n\n')
     logs.close()
 
+def numberById(id):
+    for elem in players:
+        if elem.id == id:
+            return elem.number
+    return None
+    
+    
 def logName():
     log = "logs ("
     today = time.gmtime()

@@ -403,7 +403,7 @@ def printCards(message):
             return
         pl = players[num]
         text = ['', '\n', '\n', '\n\nOther cards\n', 'People: ', 'Weapons: ', 'Places: ']
-        text[0] += str(self)
+        text[0] += str(GAME)
         text[1] += 'Cards in your hand: ' + pl.cardsInHand()
         text[2] += 'Cards you know: ' + ', '.join(list(pl.know.difference(set(pl.cards)).difference(self.opencards)))
         text[3] += ''

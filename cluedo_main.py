@@ -111,7 +111,7 @@ class Game:
             players[i].setCards(deck[am_open[n] + i * am_per_player: am_open[n] + i * am_per_player + am_per_player])
         printLog(players[i].cards)
 
-    def numberById(id):
+    def numberById(self, id):
         for elem in players:
             if elem.id == id:
                 return elem.number

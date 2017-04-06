@@ -109,7 +109,7 @@ class Game:
         am_per_player = (len(deck) - am_open[n]) // n
         for i in range(n):
             players[i].setCards(deck[am_open[n] + i * am_per_player: am_open[n] + i * am_per_player + am_per_player])
-        printLog(players[i].cards)
+            printLog(players[i].cards)
 
     def who_killed(self):
         return self.ans
@@ -143,8 +143,7 @@ class Game:
         while not self.won:
             while not players[self.now].alive:
                 self.now = (self.now + 1) % self.n
-
-
+                
             send_turn(players[self.now])
 
             my_ans = ''
@@ -168,7 +167,7 @@ class Game:
         if len(can_go) == 0:
             my_ans = ''
             return
-        bot.send_message(players[self.now].id, 'Now you are ' + players[self.now].place)
+        bot.send_message(players[self.now].id, 'You are ' + players[self.now].place)
         if len(can_go) > 1:
             my_ans = ''
             bot.send_message(players[self.now].id, "Where will you go?", reply_markup = make(can_go))
@@ -177,7 +176,8 @@ class Game:
                 pass
             players[self.now].place = my_ans
             self.choose_place = False
-        
+            bot.send_message(players[self.now].id, 'Now you are ' + players[self.now].place)
+            
         my_ans = ''
         bot.send_message(players[self.now].id, 'Choose an action:', reply_markup=self.keyboard())
         
@@ -187,7 +187,7 @@ class Game:
                 return False
 
             if my_ans == 'Cards':
-                self.printCards()
+                printCards(players[self.now].id)
                 my_ans = ''
                 bot.send_message(players[self.now].id, 'Choose an action:', reply_markup=self.keyboard())
 
@@ -200,7 +200,8 @@ class Game:
                     bot.send_message(players[self.now].id, "Your choice is: " + ', '.join(choice))
                     send_all(str(players[self.now]) + ": Was the murder committed by " + ' '.join(now_chosen) + "?", [players[self.now].id])
                     go(self.now)
-                    players[self.now].addCards(my_ans)
+                    if my_ans != 'NO' and my_ans != '':
+                        players[self.now].addCards(my_ans)
                     self.asked = True
                     bot.send_message(players[self.now].id, 'Choose an action:', reply_markup=self.keyboard())
                 else:

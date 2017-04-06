@@ -112,7 +112,7 @@ class Game:
             players[i].setCards(deck[am_open[n] + i * am_per_player: am_open[n] + i * am_per_player + am_per_player])
         printLog(players[i].cards)
 
-    def numberById(self, id):
+    def numberById(id):
         for elem in players:
             if elem.id == id:
                 return elem.number
@@ -205,7 +205,7 @@ class Game:
                 if not self.asked:
                     choice = self.ask()
                     bot.send_message(players[self.now].id, "Your choice is: " + ', '.join(choice))
-                    send_all(str(players[self.now]) + " has asked: " + ', '.join(now_chosen), [players[self.now].id])
+                    send_all(str(players[self.now]) + " has asked: Was the murder committed by " + ' '.join(now_chosen) + "?", [players[self.now].id])
                     go(self.now)
                     players[self.now].addCards(my_ans)
                     self.asked = True
@@ -406,7 +406,7 @@ def printCards(message):
             return
         num = GAME.numberById(message.chat.id)
         if num is None:
-            bot.send_message(message.chat.id, "You don't play")
+            bot.send_message(message.chat.id, "You aren't playing")
             return
         pl = players[num]
         text = ['', '\n', '\n', '\n\nOther cards\n', 'People: ', 'Weapons: ', 'Places: ']
@@ -418,10 +418,10 @@ def printCards(message):
         text[5] += ', '.join(list(set(weapons).difference(pl.know)))
         text[6] += ', '.join(list(set(places).difference(pl.know)))
         bot.send_message(pl.id, '\n'.join(text)) #my ex's code is neater
-        return
-    except Exception as err:
-        bot.send_message(message.chat.id, 'Something goes bad')
-        sendAdmin(str(err))
+        return #was that seriously the one comment you decided to keep?
+    except Exception as err: #i mean, really? totally ex discrimination
+        bot.send_message(message.chat.id, "Something went wrong. It's probably Anton's fault.")
+        sendAdmin(str(err)) #and i got complaints about that broken heart thing...
         
 @bot.message_handler(commands=['end'])
 def gameEnd(message = None):
@@ -445,8 +445,8 @@ def botEnd(message = None):
         return
     else:
         printLog('end of bot')
-        send_all('The game is over bcos the bot has stopped. Sorry:(')
-        sendAdmin('The game is over bcos the bot has stopped. Sorry:(')
+        send_all('The bot has stopped. Game over. Sorry:(')
+        sendAdmin('The bot has stopped. Game over. Sorry:(')
         print('full end')
         bot.stop_polling()
 
@@ -568,7 +568,7 @@ def send_all(msg, bad=[]):
 
 def sendAdmin(text):
     for admin in Admins:
-        bot.send_message(admin.id, 'Admin {0} {1}: '.format(admin.first_name, admin.last_name) + text)
+        bot.send_message(admin.id, 'BIRCH {0} {1}: '.format(admin.first_name, admin.last_name) + text)
 
 def send_turn(pl):
     for player in players:

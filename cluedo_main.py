@@ -407,6 +407,8 @@ def printCards(message):
         text[5] += ', '.join(list(set(weapons).difference(pl.know)))
         text[6] += ', '.join(list(set(places).difference(pl.know)))
         bot.send_message(pl.id, '\n'.join(text)) #my ex's code is neater
+        if num == GAME.now:
+            bot.send_message(players[num].id, 'Choose an action:', reply_markup=GAME.keyboard())
         return #was that seriously the one comment you decided to keep?
     except Exception as err: #i mean, really? totally ex discrimination
         bot.send_message(message.chat.id, "Something went wrong. It's probably Anton's fault.")

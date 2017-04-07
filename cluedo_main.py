@@ -198,10 +198,9 @@ class Game:
                     if my_ans != 'NO' and my_ans != '':
                         players[self.now].addCards(my_ans)
                     self.asked = True
-                    bot.send_message(players[self.now].id, 'Choose an action:', reply_markup=self.keyboard())
                 else:
                     bot.send_message(players[self.now].id, "You have already asked")
-                    bot.send_message(players[self.now].id, 'Choose an action:', reply_markup=self.keyboard())
+                bot.send_message(players[self.now].id, 'Choose an action:', reply_markup=self.keyboard())
                 my_ans = ''
 
             if my_ans == 'Accuse':

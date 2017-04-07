@@ -121,7 +121,7 @@ class Game:
         return s
 
     def keyboard(self, cards = True, ask = True, accuse = True, finish = True):
-        keys = telebot.types.ReplyKeyboardMarkup()
+        keys = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
         if cards:
             keys.row(telebot.types.KeyboardButton('Cards'))
 
@@ -485,7 +485,7 @@ def playersList():
 
 def make(arr, one_time = True):
     arr = list(arr)
-    now = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=one_time)
+    now = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     i = 0
     while i + 3 <= len(arr):
         now.row(telebot.types.KeyboardButton(arr[i + 0]), telebot.types.KeyboardButton(arr[i + 1]), telebot.types.KeyboardButton(arr[i + 2]))

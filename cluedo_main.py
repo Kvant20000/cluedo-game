@@ -99,6 +99,7 @@ class Game:
         self.ans = (rd.choice(people), rd.choice(weapons), rd.choice(places))  # the answer
         self.won = False
         self.now = 0
+        self.choose_place = False
         self.asked = False
 
         deck = people + weapons + places
@@ -414,7 +415,7 @@ def printCards(message):
         text[5] += ', '.join(list(set(weapons).difference(pl.know)))
         text[6] += ', '.join(list(set(places).difference(pl.know)))
         bot.send_message(pl.id, '\n'.join(text)) #my ex's code is neater
-        if num == GAME.now and not GAME.asking:
+        if num == GAME.now and not GAME.asking and not GAME.choose_place:
             bot.send_message(players[num].id, 'Choose an action:', reply_markup=GAME.keyboard())
         return #was that seriously the one comment you decided to keep?
     except Exception as err: #i mean, really? totally ex discrimination

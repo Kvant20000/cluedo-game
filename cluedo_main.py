@@ -95,6 +95,7 @@ class Game:
         self.d = dict()
         self.full = False
         self.max_players = 6
+        self.asking = False
         self.ans = (rd.choice(people), rd.choice(weapons), rd.choice(places))  # the answer
         self.won = False
         self.now = 0
@@ -191,17 +192,20 @@ class Game:
                 #if players[self.now].place == places[-1]:
                 #    bot.send_message(players[self.now].id, 'Your location is bad for your health. Personally, I recommend Nepal.')
                 if not self.asked:
+                    self.asking = True
+                    self.asked = True
                     choice = self.ask()
                     bot.send_message(players[self.now].id, "Your choice is: " + ', '.join(choice))
                     send_all(str(players[self.now]) + ": Was the murder committed by " + ' '.join(now_chosen) + "?", [players[self.now].id])
                     go(self.now)
                     if my_ans != 'NO' and my_ans != '':
                         players[self.now].addCards(my_ans)
-                    self.asked = True
+                    self.asking = False
                 else:
                     bot.send_message(players[self.now].id, "You have already asked")
                 bot.send_message(players[self.now].id, 'Choose an action:', reply_markup=self.keyboard())
                 my_ans = ''
+                self.asking = False
 
             if my_ans == 'Accuse':
                 my_ans = ''
@@ -296,6 +300,7 @@ def fromAdmin(message):
 @bot.message_handler(commands=['join'])
 def add_player(message): 
     if GAME is not None:
+        bot.send_photo(message.chat.id, open('slowpoke.png', 'rb'))
         bot.send_message(message.chat.id, "The game has already started.") #how bout a slowpoke pic here???
         return
 
@@ -324,6 +329,9 @@ def start_game(message):
     if GAME is not None:
         bot.send_message(message.chat.id, "The game has already started.")
     else:
+        if len(players) == 0:
+            bot.send_message(message.chat.id, 'NO')
+            return
         cfg.cluedo_init()
         people = cfg.cluedo_people
         weapons = cfg.cluedo_weapons
@@ -406,7 +414,7 @@ def printCards(message):
         text[5] += ', '.join(list(set(weapons).difference(pl.know)))
         text[6] += ', '.join(list(set(places).difference(pl.know)))
         bot.send_message(pl.id, '\n'.join(text)) #my ex's code is neater
-        if num == GAME.now:
+        if num == GAME.now and not GAME.asking:
             bot.send_message(players[num].id, 'Choose an action:', reply_markup=GAME.keyboard())
         return #was that seriously the one comment you decided to keep?
     except Exception as err: #i mean, really? totally ex discrimination

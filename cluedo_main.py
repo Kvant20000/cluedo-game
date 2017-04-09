@@ -161,6 +161,8 @@ class Game:
         
         value = dice()
 
+        bot.send_message(players[self.now].id, 'You are ' + players[self.now].place + '\n dice = ' + str(value))
+        
         can_go = []
         for place in places:
             if dist(players[self.now].place, place) <= value:
@@ -169,7 +171,7 @@ class Game:
         if len(can_go) == 0:
             my_ans = ''
             return
-        bot.send_message(players[self.now].id, 'You are ' + players[self.now].place)
+        
         if len(can_go) > 1:
             my_ans = ''
             bot.send_message(players[self.now].id, "Where will you go?", reply_markup = make(can_go))
@@ -302,7 +304,7 @@ def fromAdmin(message):
 def add_player(message): 
     if GAME is not None:
         bot.send_photo(message.chat.id, open('slowpoke.png', 'rb'))
-        bot.send_message(message.chat.id, "The game has already started.") #how bout a slowpoke pic here???
+        bot.send_message(message.chat.id, "The game has already started.")
         return
 
     global players
@@ -417,10 +419,10 @@ def printCards(message):
         bot.send_message(pl.id, '\n'.join(text)) #my ex's code is neater
         if num == GAME.now and not GAME.asking and not GAME.choose_place:
             bot.send_message(players[num].id, 'Choose an action:', reply_markup=GAME.keyboard())
-        return #was that seriously the one comment you decided to keep?
-    except Exception as err: #i mean, really? totally ex discrimination
+        return
+    except Exception as err:
         bot.send_message(message.chat.id, "Something went wrong. It's probably Anton's fault.")
-        sendAdmin(str(err)) #and i got complaints about that broken heart thing...
+        sendAdmin(str(err))
         
 @bot.message_handler(commands=['end'])
 def gameEnd(message = None):
@@ -567,7 +569,7 @@ def send_all(msg, bad=[]):
 
 def sendAdmin(text):
     for admin in Admins:
-        bot.send_message(admin.id, 'BIRCH {0} {1}: '.format(admin.first_name, admin.last_name) + text)
+        bot.send_message(admin.id, 'Admin {0} {1}: '.format(admin.first_name, admin.last_name) + text)
 
 def send_turn(pl):
     for player in players:

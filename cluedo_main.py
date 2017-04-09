@@ -567,7 +567,7 @@ def send_all(msg, bad=[]):
 
 def sendAdmin(text):
     for admin in Admins:
-        bot.send_message(admin.id, 'BIRCH {0} {1}: '.format(admin.first_name, admin.last_name) + text)
+        bot.send_message(admin.id, 'Admin {0} {1}: '.format(admin.first_name, admin.last_name) + text)
 
 def send_turn(pl):
     for player in players:

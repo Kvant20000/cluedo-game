@@ -21,7 +21,7 @@ am_open = cfg.cluedo_open
 people = cfg.cluedo_people
 weapons = cfg.cluedo_weapons
 places = cfg.cluedo_places
-
+distance = cfg.cluedo_dist
  
 class Player:
     def __init__(self, cards = [], id = 186898465, username = 'antonsa', number = -1, first_name = 'Anton', last_name = 'Anikushin', User = None):
@@ -603,9 +603,7 @@ def dice():
     return rd.randrange(1, 7) + rd.randrange(1, 7)
 
 def dist(place1, place2):
-    if place1 == place2:
-        return 0
-    return rd.randrange(1, 12)
+    return distance[places.index(place1)][places.index[place2]]
     
 def main():
     global file_name, GAME, players

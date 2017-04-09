@@ -2,9 +2,19 @@ import random as rd #i am the best translator ever!
 
 
 cluedo_open = [0, 0, 0, 6, 6, 3, 6] #[0, 0, 0, 0, 2, 3, 0]
-cluedo_people = ["Miss Scarlett", "Professor Plum", "Mrs. Peacock", "Mr. Green", "Colonel Mustard", "Mrs. White"]
-cluedo_places = ["kitchen", "ballroom", "conservatory", "dining room", "billiard room", "library", "lounge", "hall", "study"]
+cluedo_people = ["Miss Scarlett", "Professor Plum", "Lady Peacock", "Mr. Green", "Colonel Mustard", "Mrs. White"]
+cluedo_places = ["kitchen", "ballroom", "conservatory",  "billiard room", "library", "study", "lounge", "hall", "dining room"]
 cluedo_weapons = ["candlestick", "dagger", "lead pipe", "revolver", "rope", "wrench"]
+
+cluedo_dist =  [[ 0,  4,  9,  9,  9,  0,  8,  9,  5], 
+                [ 4,  0,  7,  7,  7, 10,  6,  9,  6], 
+                [ 9,  7,  0,  4,  5,  9,  8,  0, 10], 
+                [ 9,  7,  4,  0,  3,  8,  7, 10,  9], 
+                [ 9,  7,  5,  3,  0,  7,  6,  9,  8], 
+                [ 0, 10,  9,  8,  7,  0,  4,  7,  8], 
+                [ 8,  6,  8,  7,  6,  4,  0,  5,  6], 
+                [ 9,  9,  0, 10,  9,  7,  5,  0,  5], 
+                [ 5,  6, 10,  9,  8,  8,  6,  5,  0]]
 
 class CluedoDeck:
 	def __init__(self, ppl = [], wps = [], pls = []):
@@ -17,8 +27,8 @@ class CluedoDeck:
 	
 def cluedo_init():
 	global cluedo_people, cluedo_places, cluedo_weapons
-	people = ["Miss Scarlett", "Professor Plum", "Mrs. Peacock", "Mr. Green", "Colonel Mustard", "Mrs. White"]
-	places = ["kitchen", "ballroom", "conservatory", "dining room", "billiard room", "library", "lounge", "hall", "study"]
+	people = ["Miss Scarlett", "Professor Plum", "Lady Peacock", "Mr. Green", "Colonel Mustard", "Mrs. White"]
+	places = ["kitchen", "ballroom", "conservatory",  "billiard room", "library", "study", "lounge", "hall", "dining room"]
 	weapons = ["candlestick", "dagger", "lead pipe", "revolver", "rope", "wrench"]
 	normal_deck = CluedoDeck(people, weapons, places)
 

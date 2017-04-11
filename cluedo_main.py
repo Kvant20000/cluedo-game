@@ -605,7 +605,7 @@ def dice():
     return rd.randrange(1, 7) + rd.randrange(1, 7)
 
 def dist(place1, place2):
-    return distance[places.index(place1)][places.index[place2]]
+    return distance[places.index(place1)][places.index(place2)]
     
 def main():
     global file_name, GAME, players

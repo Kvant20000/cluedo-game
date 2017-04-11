@@ -26,6 +26,7 @@ class Player:
         self.asked = False
         self.user = User
         self.place = 'cobybook'
+        self.person = 'pen'
         if User is None:
             self.user = telebot.types.User(id = id, username = username, first_name = first_name)
             self.id = id
@@ -119,8 +120,6 @@ class Game:
     
     def start(self):
         sendAdmin('Game ' + str(self.id) + ' starts')
-        sendAdmin('Currently in game: \n' + playersList(self))
-        send_all('Currently in game: \n' + playersList(self), self)
         
         self.started = True 
         n = len(self.players)
@@ -135,17 +134,23 @@ class Game:
         
         self.startPrint()
         
+        other = deepcopy(self.people)
+        
         am_per_player = (len(deck) - self.am_open[n]) // n
         for i in range(n):
             self.players[i].setCards(deck[self.am_open[n] + i * am_per_player: self.am_open[n] + i * am_per_player + am_per_player])
             bot.send_message(self.players[i].id, 'Your cards: ' + self.players[i].cardsInHand())
-            
             for open in self.opencards:
                 self.players[i].addCards(open)
             
             self.players[i].place = rd.choice(self.places)
+            self.players[i].person = rd.choice(other)
+            bot.send_message(self.players[i].id, "You are " + self.players[i].person)
+            other.remove(self.players[i].person)
             printLog(self.players[i].cards)
-        
+            
+        sendAdmin('Currently in game: \n' + playersList(self))
+        send_all('Currently in game: \n' + playersList(self), self)
     
     def startPrint(self):
         send_all("Cards in game", self)
@@ -209,6 +214,11 @@ class Game:
                     self.asking = True
                     self.asked = True
                     self.ask()
+                    another = self.numberByName(self.now_chosen[0])
+                    if another is None:
+                        pass
+                    else:
+                        self.players[another].place = self.now_chosen[2]
                     bot.send_message(pl.id, "Your choice is: " + ', '.join(self.now_chosen))
                     send_all(str(pl) + ": Was the murder committed by " + ' '.join(self.now_chosen) + "?", self, [pl.id])
                     go(self.now, self)
@@ -300,6 +310,11 @@ class Game:
                 return elem.number
         return None
 
+    def numberByName(self, name):
+        for elem in self.players:
+            if elem.person == name:
+                return elem.number
+        return None
     
     def who_killed(self):
         return self.ans
@@ -463,6 +478,7 @@ def printCards(message):
         
 @bot.message_handler(commands=['end'])
 def gameEnd(message):
+    global games
     pl = Player(User = message.from_user)
     if not (message.from_user.id in AdminId or personToGame.get(pl) is None):
         bot.send_message(message.from_user.id, "Anton is a birch!")
@@ -473,6 +489,7 @@ def gameEnd(message):
                 personToGame[pl] = None
             games[gm] = None
         games = []
+        broadcast("All the games are finished")
         return
     else:
         send_all('Game over. Do you want to start a new game?', personToGame.get(pl))

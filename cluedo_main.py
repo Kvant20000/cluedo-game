@@ -13,8 +13,8 @@ import cfg
 TOKEN = "303602093:AAGz6ihk895s3K07vYqc6eBY8InFwX4YuhQ"
 TOKEN2 = "286496122:AAGED92TDcccXHGJmgyz5oJcCcZ4TI-vTrM"
 
-AdminId = [186898465]#, 319325008]
-Admins = [telebot.types.User(id = 186898465, username = 'antonsa', first_name = 'Anton', last_name = 'Anikushin')]#, telebot.types.User(id = 319325008, username = 'greatkorn', first_name = 'Anton', last_name = 'Kvasha')]
+AdminId = [186898465, 319325008]
+Admins = [telebot.types.User(id = 186898465, username = 'antonsa', first_name = 'Anton', last_name = 'Anikushin'), telebot.types.User(id = 319325008, username = 'greatkorn', first_name = 'Anton', last_name = 'Kvasha')]
 
 
 class Player:
@@ -120,7 +120,7 @@ class Game:
     
     def start(self):
         sendAdmin('Game ' + str(self.id) + ' starts')
-        
+        rd.shuffle(self.players)
         self.started = True 
         n = len(self.players)
         self.alive = n
@@ -138,6 +138,7 @@ class Game:
         
         am_per_player = (len(deck) - self.am_open[n]) // n
         for i in range(n):
+            self.players[i].number = i
             self.players[i].setCards(deck[self.am_open[n] + i * am_per_player: self.am_open[n] + i * am_per_player + am_per_player])
             bot.send_message(self.players[i].id, 'Your cards: ' + self.players[i].cardsInHand())
             for open in self.opencards:
@@ -145,11 +146,12 @@ class Game:
             
             self.players[i].place = rd.choice(self.places)
             self.players[i].person = rd.choice(other)
-            bot.send_message(self.players[i].id, "You are " + self.players[i].person)
             other.remove(self.players[i].person)
             printLog(self.players[i].cards)
+        for i in range(n):
+            send_all(str(self.players[i]) + ' is ' + self.players[i].person, self)
             
-        sendAdmin('Currently in game: \n' + playersList(self))
+        sendAdmin('Currently in ' + str(self) + ': \n' + playersList(self))
         send_all('Currently in game: \n' + playersList(self), self)
     
     def startPrint(self):
@@ -215,6 +217,7 @@ class Game:
                     self.asked = True
                     self.ask()
                     another = self.numberByName(self.now_chosen[0])
+                    print(another, self.now_chosen[0])
                     if another is None:
                         pass
                     else:
@@ -223,7 +226,7 @@ class Game:
                     send_all(str(pl) + ": Was the murder committed by " + ' '.join(self.now_chosen) + "?", self, [pl.id])
                     go(self.now, self)
                     if self.my_ans != 'NO' and self.my_ans != '':
-                        pl.addCards(selfmy_ans)
+                        pl.addCards(self.my_ans)
                     self.asking = False
                 else:
                     bot.send_message(pl.id, "You have already asked")
@@ -312,7 +315,7 @@ class Game:
 
     def numberByName(self, name):
         for elem in self.players:
-            if elem.person == name:
+            if str(elem.person) == str(name):
                 return elem.number
         return None
     

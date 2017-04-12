@@ -9,13 +9,32 @@ import datetime
 import random as rd
 from copy import deepcopy
 import cfg
+import threading
 
 TOKEN = "303602093:AAGz6ihk895s3K07vYqc6eBY8InFwX4YuhQ"
 TOKEN2 = "286496122:AAGED92TDcccXHGJmgyz5oJcCcZ4TI-vTrM"
+MAX_GAMES = 2
 
 AdminId = [186898465, 319325008]
 Admins = [telebot.types.User(id = 186898465, username = 'antonsa', first_name = 'Anton', last_name = 'Anikushin'), telebot.types.User(id = 319325008, username = 'greatkorn', first_name = 'Anton', last_name = 'Kvasha')]
 
+curr = 0
+
+def func(val):
+    global curr
+    #main(val)
+    curr += 10
+    print(threading.current_thread())
+
+def create(games):
+    enum = []
+    for i in range(games):
+        new_thr = threading.Thread(name = "Game " + str(i), target = func, args = [i])
+        enum.append(new_thr)
+        new_thr.start()
+    for elem in enum:
+        elem.join()
+        print(elem)
 
 class Player:
     def __init__(self, cards = [], id = 186898465, username = 'antonsa', number = -1, first_name = 'Anton', last_name = 'Anikushin', User = None):
@@ -283,7 +302,7 @@ class Game:
             send_all("The correct answer is: " + ', '.join(self.who_killed()), self, [pl.id])
             return True
         else:
-            players[self.now].alive = False
+            self.players[self.now].alive = False
             self.alive -= 1
             bot.send_photo(pl.id, open('lose.jpg', 'rb'))
             send_all(str(pl) + " accused: " + ', '.join(ans), self)
@@ -292,7 +311,7 @@ class Game:
 
         if self.alive == 1:
             for i in range(self.n):
-                pla = players[i]
+                pla = self.players[i]
                 if pla.alive == True:
                     bot.send_photo(pla.id, open('win.png', 'rb'))
                     send_all(str(pla) + ' won the game!', self)
@@ -663,5 +682,6 @@ def main():
     
 
 if __name__ == '__main__':
-    main()
+    create(5)
+    print(curr)
 print(__name__)

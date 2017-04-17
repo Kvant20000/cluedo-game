@@ -147,7 +147,7 @@ class Game:
                 self.now = (self.now + 1) % self.n
                 
             send_turn(players[self.now])
-
+            printLog(str(players[self.now]))
             my_ans = ''
             self.won = self.turn()
 

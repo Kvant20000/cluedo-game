@@ -89,6 +89,7 @@ class Player:
 
 class Game:
     def __init__(self, n):  # n players
+        printLog("Game __init__")
         self.now = 0
         self.alive = n
         self.n = n
@@ -97,6 +98,7 @@ class Game:
         self.max_players = 6
         self.asking = False
         self.ans = (rd.choice(people), rd.choice(weapons), rd.choice(places))  # the answer
+        printLog('!!! answer is ' + ', '.join(self.ans))
         self.won = False
         self.now = 0
         self.choose_place = False
@@ -108,10 +110,11 @@ class Game:
         rd.shuffle(deck)  # so i shuffled
 
         self.opencards = deck[:am_open[n]]
+        printLog('!!! open is ' + ', '.join(self.opencards))
         am_per_player = (len(deck) - am_open[n]) // n
         for i in range(n):
             players[i].setCards(deck[am_open[n] + i * am_per_player: am_open[n] + i * am_per_player + am_per_player])
-            printLog(players[i].cards)
+            printLog(str(players[i].cards) + ' in ' + str(players[i]) + 'hand; id = ' + str(players[i].id))
 
     def who_killed(self):
         return self.ans
@@ -144,30 +147,34 @@ class Game:
         sendAdmin('Currently in game: \n' + playersList()) 
         while not self.won:
             while not players[self.now].alive:
+                printLog(str(players[self.now]) + " " + str(players[self.now].alive))
                 self.now = (self.now + 1) % self.n
                 
             send_turn(players[self.now])
-            printLog(str(players[self.now]))
+            printLog(str(players[self.now]) + " " + str(players[self.now].alive))
             my_ans = ''
+            
+            printLog("start turn; self.now = " + str(self.now))
             self.won = self.turn()
-
+            printLog("end turn; self.now = " + str(self.now))
+            
             my_ans = ''
             self.now = (self.now + 1) % self.n
             self.asked = False
         return
 
     def turn(self):
-        global my_ans
+        global my_ans, now_chosen
         
         value = dice()
-
-        bot.send_message(players[self.now].id, 'You are ' + players[self.now].place + '\n dice = ' + str(value))
+        printLog('dice is ' + str(value) + "\nself.now = " + str(self.now))
+        bot.send_message(players[self.now].id, 'You are ' + players[self.now].place + '\ndice = ' + str(value))
         
         can_go = []
         for place in places:
             if dist(players[self.now].place, place) <= value:
                 can_go += [place]
-                
+        printLog("player can go " + ', '.join(can_go))
         if len(can_go) == 0:
             my_ans = ''
             return
@@ -178,6 +185,7 @@ class Game:
             self.choose_place = True
             while my_ans == '':
                 pass
+            printLog("player goes to the " + str(my_ans))
             players[self.now].place = my_ans
             self.choose_place = False
             bot.send_message(players[self.now].id, 'Now you are ' + players[self.now].place)
@@ -185,42 +193,59 @@ class Game:
         my_ans = ''
         bot.send_message(players[self.now].id, 'Choose an action:', reply_markup=self.keyboard())
         
+        printLog('player is ' + players[self.now].place)#location of player
+        printLog(str(players[self.now]) + ' is choosing action')
         while True:
             if my_ans == 'End turn':
                 my_ans = ''
+                
+                printLog("choosen 'End turn' by the " + str(players[self.now]))
                 return False
 
             if my_ans == 'Ask':
                 my_ans = ''
-                #if players[self.now].place == places[-1]:
-                #    bot.send_message(players[self.now].id, 'Your location is bad for your health. Personally, I recommend Nepal.')
-                if not self.asked:
+                printLog("choosen 'Ask' by the " + str(players[self.now]))
+                if not self.asked and not self.asking:
+                    printLog('ask starts')
+                    
                     self.asking = True
                     self.asked = True
                     choice = self.ask()
+                    now_chosen = choice
+                    printLog("in 'turn' choice is " + ', '.join(choice))
+                    
                     bot.send_message(players[self.now].id, "Your choice is: " + ', '.join(choice))
                     send_all(str(players[self.now]) + ": Was the murder committed by " + ' '.join(now_chosen) + "?", [players[self.now].id])
                     go(self.now)
                     if my_ans != 'NO' and my_ans != '':
                         players[self.now].addCards(my_ans)
                     self.asking = False
+                    
+                    printLog('asking ends')
                 else:
                     bot.send_message(players[self.now].id, "You have already asked")
                 bot.send_message(players[self.now].id, 'Choose an action:', reply_markup=self.keyboard())
                 my_ans = ''
                 self.asking = False
+                printLog('ask ends')
 
             if my_ans == 'Accuse':
+                printLog('accusing by ' + str(players[self.now]))
                 my_ans = ''
                 choice = self.accuse()
+                now_chosen = choice
+                printLog("in 'turn' choice is " + ', '.join(choice))
+                
                 bot.send_message(players[self.now].id, "Your choice is: " + ', '.join(choice))
                 flag = self.checking(choice)
                 my_ans = ''
+                printLog("end of 'accuse'")
                 return flag
 
         return False
 
     def ask(self):
+        printLog(str(players[self.now]) + ' is asking; self.now = ' + str(self.now))
         global now_chosen
         now_chosen = []
         bot.send_message(players[self.now].id, "Choose a person: ", reply_markup=make(people))
@@ -230,9 +255,11 @@ class Game:
         while len(now_chosen) != 2:
             pass
         now_chosen.append(players[self.now].place)
+        printLog("choice is " + str(now_chosen))
         return now_chosen
 
     def accuse(self):
+        printLog(str(players[self.now]) + ' is accusing; self.now = ' + str(self.now))
         global now_chosen
         now_chosen = []
         player = players[self.now]
@@ -245,16 +272,20 @@ class Game:
         bot.send_message(players[self.now].id, "Choose a place: ", reply_markup=make(list(set(places).difference(player.knownCards()))))
         while len(now_chosen) != 3:
             pass
+        printLog("choice is " + str(now_chosen))
         return now_chosen
 
 
     def checking(self, ans):
+        printLog('from player : ' + ', '.join(ans) + '\ncorrect : ' + ', '.join(GAME.ans))
         if check_ans(ans):
+            printLog('CORRECT ANSWER')
             bot.send_photo(players[self.now].id, open('win.png', 'rb'))
             send_all(str(players[self.now]) + " won the game!")
             send_all("The correct answer is: " + ', '.join(self.who_killed()), [players[self.now].id])
             return True
         else:
+            printLog(' INCORRECT ANSWER')
             players[self.now].alive = False
             self.alive -= 1
             bot.send_photo(players[self.now].id, open('lose.jpg', 'rb'))
@@ -274,7 +305,7 @@ class Game:
         return False
 
 MAX_PLAYERS = 6
-bot = telebot.TeleBot(TOKEN)
+bot = telebot.TeleBot(TOKEN2)
 GAME = None
 players = []
 #FINISHED = False
@@ -312,8 +343,10 @@ def add_player(message):
     id = message.chat.id
     name = message.chat.username
     user = message.from_user
+    printLog("Player " + str(name) + " try to join game")
     pl = Player(User = user)
     if len(players) >= MAX_PLAYERS:
+        bot.send_photo(message.chat.id, open('slowpoke.png', 'rb'))
         bot.send_message(id, "Sorry, there is no place for people like you in this game!")
         return
     elif not hasPlayer(pl):
@@ -335,11 +368,12 @@ def start_game(message):
         if len(players) == 0:
             bot.send_message(message.chat.id, 'NO')
             return
+        printLog("Game starts by " + str(message.from_user.username))
         cfg.cluedo_init()
         people = cfg.cluedo_people
         weapons = cfg.cluedo_weapons
         places = cfg.cluedo_places
-        
+        printLog("deck:\n" + ', '.join(people) + ';\n' + ', '.join(weapons) + ';\n' + ', '.join(places))
         sendAdmin('The game is starting')
         active = [True] * len(players)
 
@@ -365,6 +399,7 @@ def start_game(message):
             bot.send_message(player.id, 'Your cards: ' + player.cardsInHand())
 
         GAME.game()
+        printLog('Before game end')
         gameEnd()
 
 
@@ -455,6 +490,7 @@ def botEnd(message = None):
 @bot.message_handler()
 def catch(message): 
     global now_chosen, my_ans, who
+    printLog("'" + str(message.text) + "' from " + str(message.from_user.id))
     if GAME is None:
         return
 
@@ -517,9 +553,13 @@ def go(index):
     global my_ans, who
     my_ans = ''
     man = (index + 1) % GAME.n
+    printLog("function 'go', person = " + str(index) + " must be = " + str(GAME.now) + '; id = ' + players[index].id)
+    printLog("answering now in 'go': " + str(man) + '; id = ' + str(players[man].id))
     while man != index and not answer(man):
         my_ans = ''
         man = (man + 1) % GAME.n
+        printLog("answering now in 'go': " + str(man) + '; id = ' + str(players[man].id))
+        
     if man == index:
         send_all('Nobody can help!')
     else:
@@ -529,25 +569,29 @@ def go(index):
 
 def answer(man):
     global my_ans, who
-
+    printLog("answering in 'answer': " + str(man) + '; id = ' + str(players[man].id))
     who = man
     id = players[man].id
     Pl = players[man]
     cards = set(Pl.cards)
     now = set(now_chosen)
     inter = now.intersection(cards)
-
+    printLog(inter)
 
     if len(inter) == 0:
+        my_ans = ''
         bot.send_message(id, "Choose an answer: ", reply_markup=make(['NO']))
         while len(my_ans) == 0:
             pass
         send_all(str(players[man]) + " couldn't answer", [players[man].id])
+        printLog('asnwer is ' + str(my_ans))
         return False
     else:
+        my_ans = ''
         bot.send_message(id, "Choose an answer: ", reply_markup=make(list(inter)))
         while len(my_ans) == 0:
             pass
+        printLog('asnwer is ' + str(my_ans))
         return True
 
 def hasPlayer(pl):
@@ -588,7 +632,7 @@ def numberById(id):
             return elem.number
     return None
     
-    
+
 def logName():
     log = "logs ("
     today = time.gmtime()
@@ -600,6 +644,8 @@ def logName():
     seconds = str(today.tm_sec)
     log += str(year) + '.' + str(month) + '.' + str(day) + ' ' + str(hour) + ';' + str(minute) + ';' + str(seconds) + ').txt'
     return log
+    
+    
 
 def dice():
     return rd.randrange(1, 7) + rd.randrange(1, 7)
@@ -614,9 +660,10 @@ def main():
     loggs.close()
     GAME = None
     players = []
+    printLog('Bot starts')
     sendAdmin('Bot starts')
     bot.polling()
-    
+    printLog('Bot stops')
 
 if __name__ == '__main__':
     main()

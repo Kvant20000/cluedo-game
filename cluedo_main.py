@@ -553,7 +553,7 @@ def go(index):
     global my_ans, who
     my_ans = ''
     man = (index + 1) % GAME.n
-    printLog("function 'go', person = " + str(index) + " must be = " + str(GAME.now) + '; id = ' + players[index].id)
+    printLog("function 'go', person = " + str(index) + " must be = " + str(GAME.now) + '; id = ' + str(players[index].id))
     printLog("answering now in 'go': " + str(man) + '; id = ' + str(players[man].id))
     while man != index and not answer(man):
         my_ans = ''

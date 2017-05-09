@@ -665,5 +665,8 @@ def main():
     bot.polling()
     printLog('Bot stops')
 
-if __name__ == '__main__':
-    main()
+try:
+    if __name__ == '__main__':
+        main()
+except Exception as err:
+    printLog(str(err))

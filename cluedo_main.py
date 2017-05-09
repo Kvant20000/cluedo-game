@@ -20,22 +20,6 @@ Admins = [telebot.types.User(id = 186898465, username = 'antonsa', first_name = 
 
 curr = 0
 
-def func(val):
-    global curr
-    #main(val)
-    curr += 10
-    print(threading.current_thread())
-
-def create(games):
-    enum = []
-    for i in range(games):
-        new_thr = threading.Thread(name = "Game " + str(i), target = func, args = [i])
-        enum.append(new_thr)
-        new_thr.start()
-    for elem in enum:
-        elem.join()
-        print(elem)
-
 class Player:
     def __init__(self, cards = [], id = 186898465, username = 'antonsa', number = -1, first_name = 'Anton', last_name = 'Anikushin', User = None):
         self.cards = deepcopy(cards)
@@ -170,7 +154,7 @@ class Game:
         for i in range(n):
             send_all(str(self.players[i]) + ' is ' + self.players[i].person, self)
             
-        sendAdmin('Currently in ' + str(self) + ': \n' + playersList(self))
+        sendAdmin('Currently in ' + str(self.id) + ': \n' + playersList(self))
         send_all('Currently in game: \n' + playersList(self), self)
     
     def startPrint(self):
@@ -366,15 +350,28 @@ class Game:
     def __str__(self):
         return "Game number is " + str(self.id) + '\n' + playersList(self)
     
+    def __hash__(self):
+        return self.id
+    
+    def __eq__(self, other):
+        return self.id == other.id
+    
     def status(self):
         st = "started" if self.started else ("waiting(" + str(self.max_players - len(self.players)) + ')')
         return str(self.id) + " " + st
     
 MAX_PLAYERS = 6
-bot = telebot.TeleBot(TOKEN2)
+bot = telebot.TeleBot(TOKEN)
 games = []
 
 personToGame = dict()
+
+def running(gm):
+    gm.start()
+    gm.game()
+    for play in gm.players:
+        personToGame[play] = None
+    games.pop(games.index(gm))
 
 #FINISHED = False
 #active = []
@@ -431,11 +428,8 @@ def start_game(message):
         bot.send_message(pl.id, 'You do not take part in any game')
         return
     else:
-        gm.start()
-        gm.game()
-        for play in gm.players:
-            personToGame[play] = None
-        games.pop(games.index(gm))
+        new_thr = threading.Thread(name = "Game " + str(gm), target = running, args = [gm])
+        new_thr.start()
         
 @bot.message_handler(commands=['help', 'start'])
 def helpMessege(message):
@@ -522,7 +516,7 @@ def gameEnd(message):
         games.pop(games.index(gm))
 
 @bot.message_handler(commands=['full_end'])
-def botEnd(message = None): 
+def botEnd(message): 
     if not (message.from_user.id in AdminId):
         bot.send_message(message.from_user.id, "Anton is a very big birch!")
         return
@@ -682,6 +676,5 @@ def main():
     
 
 if __name__ == '__main__':
-    create(5)
-    print(curr)
+    main()
 print(__name__)

@@ -15,8 +15,8 @@ TOKEN = "303602093:AAGz6ihk895s3K07vYqc6eBY8InFwX4YuhQ"
 TOKEN2 = "286496122:AAGED92TDcccXHGJmgyz5oJcCcZ4TI-vTrM"
 MAX_GAMES = 2
 
-AdminId = [186898465, 319325008]
-Admins = [telebot.types.User(id = 186898465, username = 'antonsa', first_name = 'Anton', last_name = 'Anikushin'), telebot.types.User(id = 319325008, username = 'greatkorn', first_name = 'Anton', last_name = 'Kvasha')]
+AdminId = [186898465]#, 319325008]
+Admins = [telebot.types.User(id = 186898465, username = 'antonsa', first_name = 'Anton', last_name = 'Anikushin')]#, telebot.types.User(id = 319325008, username = 'greatkorn', first_name = 'Anton', last_name = 'Kvasha')]
 
 curr = 0
 
@@ -92,32 +92,35 @@ class Player:
 
 
 class Game:
-    def __init__(self):
-        cfg.cluedo_init()
-        self.am_open = cfg.cluedo_open
-        self.people = cfg.cluedo_people
-        self.weapons = cfg.cluedo_weapons
-        self.places = cfg.cluedo_places
-        self.distance = cfg.cluedo_dist
-        
-        self.id = int(rd.random() * 10000000)
-        
-        self.now = 0
-        self.max_players = 6
-        self.started = False
-        
-        self.won = False
-        self.asking = False
-        self.asked = False
-        self.choose_place = False
-        
-        self.ans = (rd.choice(self.people), rd.choice(self.weapons), rd.choice(self.places))  # the answer
-        self.players = []
-        
-        self.my_ans = ''
-        self.now_chosen = []
-        self.who = -1
-    
+    def __init__(self, number=None):
+        if number is None:
+            cfg.cluedo_init()
+            self.am_open = cfg.cluedo_open
+            self.people = cfg.cluedo_people
+            self.weapons = cfg.cluedo_weapons
+            self.places = cfg.cluedo_places
+            self.distance = cfg.cluedo_dist
+            
+            self.id = int(rd.random() * 10000000)
+            
+            self.now = 0
+            self.max_players = 6
+            self.started = False
+            
+            self.won = False
+            self.asking = False
+            self.asked = False
+            self.choose_place = False
+            
+            self.ans = (rd.choice(self.people), rd.choice(self.weapons), rd.choice(self.places))  # the answer
+            self.players = []
+            
+            self.my_ans = ''
+            self.now_chosen = []
+            self.who = -1
+        else:
+            self.id = number
+            
     def addPlayers(self, pl):
         self.players += [pl]
     
@@ -357,12 +360,12 @@ class Game:
         return self.id == other.id
     
     def status(self):
-        st = "started" if self.started else ("waiting(" + str(self.max_players - len(self.players)) + ')')
+        st = "started" if self.started else ("waiting(" + str(self.max_players - len(self.players)) + ') ' + '/join_' + str(self.id))
         return str(self.id) + " " + st
     
 MAX_PLAYERS = 6
-bot = telebot.TeleBot(TOKEN)
-games = []
+bot = telebot.TeleBot(TOKEN2)
+games = dict()
 
 personToGame = dict()
 
@@ -371,19 +374,9 @@ def running(gm):
     gm.game()
     for play in gm.players:
         personToGame[play] = None
-    games.pop(games.index(gm))
-
-#FINISHED = False
-#active = []
-
-#FINISHED = False
-#active = []
+    games.pop(gm)
 
 file_name = 'logs.txt'
-
-# @bot.message_handler()
-# def trash(message):
-   # print(message.text)
 
 def fromAdmin(message):
     return message.from_user.id in AdminId
@@ -391,7 +384,7 @@ def fromAdmin(message):
 @bot.message_handler(commands=['new_game'])
 def addGame(message):
     gm = Game()
-    games.append(gm)
+    games[gm] = gm
     sendAdmin('New game created')
     printLog('New game created')
 
@@ -419,7 +412,24 @@ def add_player(message):
     if len(gm.players) == gm.max_players:
         start_game(message)
 
-
+@bot.message_handler(func=lambda message: message.text[:6] == '/join_')
+def add_to_game(message):
+    number = int(message.text[6:])
+    gm = games.get(Game(number), None)
+    if gm is None:
+        bot.send_message(message.from_user.id, "No such game")
+        return
+    pl = Player(User = message.from_user)
+    if personToGame.get(pl, None) is not None:
+        bot.send_message(pl.id, 'You are already in the game')
+        return
+    gm.addPlayers(pl)
+    personToGame[pl] = gm
+    bot.send_message(pl.id, "You join " + str(gm))
+    send_all(str(gm), gm, bad=[pl.id])
+    if len(gm.players) == gm.max_players:
+        start_game(message)
+    
 @bot.message_handler(commands=['game'])
 def start_game(message): 
     pl = Player(User = message.from_user)
@@ -533,7 +543,7 @@ def catch(message):
     id = message.from_user.id
     pl = Player(User = message.from_user)
     text = message.text
-    gm = personToGame.get(pl)
+    gm = personToGame.get(pl, None)
     
     if gm is None:
         return
@@ -552,6 +562,14 @@ def catch(message):
         return
     return
 
+def getGame(User):#raise 'TypeError'
+    pl = User
+    if isinstance(pl, telebot.types.User):
+        pl = Player(User = pl)
+    elif not isinstance(pl, Player):
+        raise TypeError
+    gm = personToGame.get(pl, None)
+    
 def playersList(gm): 
     ans = []
     for elem in gm.players:

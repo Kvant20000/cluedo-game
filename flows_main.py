@@ -354,7 +354,7 @@ class Game:
         return s
 
     def __str__(self):
-        return "Game number is " + str(game_by_id[self.id]) + '\n' + playersList(self)
+        return str(game_by_id[self.id])
 
     def __hash__(self):
         return self.id
@@ -364,7 +364,10 @@ class Game:
 
     def status(self):
         st = "started, " if self.started else ("waiting (" + str(self.max_players - len(self.players)) + '), ')
-        return str(game_by_id[self.id]) + " " + st + ("room is empty" if len(self.players) == 0 else 'currently in room: ' + ', '.join(map(str, self.players)))
+        if st == "started, ":
+            return str(game_by_id[self.id]) + " " + st + ("room is empty" if len(self.players) == 0 else 'currently in room: ' + ', '.join(map(str, self.players)))
+        else:
+            return str(game_by_id[self.id]) + " " + st + ("room is empty" if len(self.players) == 0 else 'currently in room: ' + ', '.join(map(str, self.players))) + '  /join_' + str(game_by_id[self.id])
 
 
 MAX_PLAYERS = 6
@@ -462,6 +465,24 @@ def add_player(message):
     if len(gm.players) == gm.max_players:
         start_game(message)
 
+
+@bot.message_handler(func=lambda message: message.text[:6] == '/join_')
+def add_to_game(message):
+    number = int(message.text[6:])
+    gm = games[number - 1]
+    if gm is None:
+        bot.send_message(message.from_user.id, "No such game")
+        return
+    pl = Player(User = message.from_user)
+    if personToGame.get(pl, None) is not None:
+        bot.send_message(pl.id, 'You are already in the game')
+        return
+    gm.addPlayers(pl)
+    personToGame[pl] = gm
+    bot.send_message(pl.id, "You join game " + (str(gm)))
+    send_all(str(gm), gm, bad=[pl.id])
+    if len(gm.players) == gm.max_players:
+        start_game(message)
 
 @bot.message_handler(commands=['game'])
 def start_game(message):

@@ -365,9 +365,9 @@ class Game:
     def status(self):
         st = "started, " if self.started else ("waiting (" + str(self.max_players - len(self.players)) + '), ')
         if st == "started, ":
-            return str(game_by_id[self.id]) + " " + st + ("room is empty" if len(self.players) == 0 else 'currently in room: ' + ', '.join(map(str, self.players)))
+            return "Room " + str(game_by_id[self.id]) + ", " + st + ("room is empty" if len(self.players) == 0 else 'currently in room: ' + ', '.join(map(str, self.players)))
         else:
-            return str(game_by_id[self.id]) + " " + st + ("room is empty" if len(self.players) == 0 else 'currently in room: ' + ', '.join(map(str, self.players))) + '  /join_' + str(game_by_id[self.id])
+            return "Room " + str(game_by_id[self.id]) + ", " + st + ("room is empty" if len(self.players) == 0 else 'currently in room: ' + ', '.join(map(str, self.players))) + '  /join_' + str(game_by_id[self.id])
 
 
 MAX_PLAYERS = 6

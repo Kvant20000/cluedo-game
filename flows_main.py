@@ -514,7 +514,7 @@ def use(message):
     bot.send_message(id, text)
 
 
-@bot.message_handler(commands=['status', 'active'], func=fromAdmin)
+@bot.message_handler(commands=['status', 'active'])
 def status(message):
     print(message.text, len(games))
     id = message.from_user.id

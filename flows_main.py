@@ -111,6 +111,7 @@ class Game:
 
         self.won = False
         self.asking = False
+        self.accusing = False
         self.asked = False
         self.choose_place = False
 
@@ -119,6 +120,7 @@ class Game:
 
         self.my_ans = ''
         self.now_chosen = []
+        self.inter = set()
         self.who = -1
 
     def addPlayers(self, pl):
@@ -243,10 +245,12 @@ class Game:
 
             if self.my_ans == 'Accuse':
                 self.my_ans = ''
+                self.accusing = True
                 self.accuse()
                 bot.send_message(pl.id, "Your choice is: " + ', '.join(self.now_chosen))
                 flag = self.checking(self.now_chosen)
                 self.my_ans = ''
+                self.accusing = False
                 return flag
 
         return False
@@ -444,13 +448,13 @@ def add_player(message):
         can = [games[-1]]
 
     if not message.text.startswith('/join '):
-        join_error(pl.id);
+        join_error(pl.id)
         return
 
     try:
         game_id = int(message.text[len('/join '):])
     except:
-        join_error()
+        join_error(pl.id)
         return
 
     if game_id > len(can) or game_id < 1:
@@ -529,7 +533,7 @@ def status(message):
 @bot.message_handler(commands=['players'])
 def composition(message):
     pl = Player(User=message.from_user)
-    gm = personToGame.get(pl, None)
+    gm = getGame(pl)
     if gm is None:
         bot.send_message(pl.id, 'Please, join any game')
         return
@@ -540,7 +544,7 @@ def composition(message):
 @bot.message_handler(func=lambda message: message.text == 'Cards')
 def printCards(message):
     pl = Player(User=message.from_user)
-    gm = personToGame.get(pl, None)
+    gm = getGame(pl)
     if gm is None:
         bot.send_message(pl.id, 'Please, join any game')
         return
@@ -563,7 +567,7 @@ def printCards(message):
 def gameEnd(message):
     global games
     pl = Player(User=message.from_user)
-    if not (message.from_user.id in AdminId or personToGame.get(pl) is None):
+    if not (message.from_user.id in AdminId or getGame(pl) is None):
         bot.send_message(message.from_user.id, "Anton is a birch!")
         return
     elif message.from_user.id in AdminId:
@@ -572,10 +576,10 @@ def gameEnd(message):
                 personToGame[pl] = None
             games[gm] = None
         games = []
-        broadcast("All the games are finished")
+        broadcast("All the rooms are closed")
         return
     else:
-        send_all('Game over. Do you want to start a new game?', personToGame.get(pl))
+        send_all('Game over. Do you want to start a new game?', getGame(pl))
         sendAdmin('Game over. Do you want to start a new game?')
         gm = personToGame.get(pl)
         for per in gm.players:
@@ -585,44 +589,105 @@ def gameEnd(message):
         game_by_id[games[last_id].id] = last_id + 1
 
 
-@bot.message_handler(commands=['full_end'])
+@bot.message_handler(commands=['full_end'], func=fromAdmin)
 def botEnd(message):
-    if not (message.from_user.id in AdminId):
-        bot.send_message(message.from_user.id, "No permission!")
-        return
+    printLog('end of bot')
+    broadcast('The bot has stopped. Game over. Sorry:(')
+    sendAdmin('The bot has stopped. Game over. Sorry:(')
+    print('full end')
+    bot.stop_polling()
+
+@bot.message_handler(func=lambda mess: getGame(mess) is None or messageType(mess) == 'ignore')
+def ignore(message):
+    pass
+    return
+    
+    
+@bot.message_handler(func=lambda mess: messageType(mess) == 'answer')
+def gameAnswer(message):
+    text = message.text
+    gm = getGame(message)
+    if text in gm.inter:
+        gm.my_ans = text
     else:
-        printLog('end of bot')
-        broadcast('The bot has stopped. Game over. Sorry:(')
-        sendAdmin('The bot has stopped. Game over. Sorry:(')
-        print('full end')
-        bot.stop_polling()
+        bot.send_message(message.from_user.id, 'Item is not found')
 
+@bot.message_handler(func=lambda mess: messageType(mess) == 'ask')
+def gameAsk(message):
+    text = message.text
+    gm = getGame(message)
+    if text in gm.people + gm.weapons + gm.places:
+        gm.now_chosen += [text]
+    else:
+        bot.send_message(message.from_user.id, 'Item is not found')
 
+@bot.message_handler(func=lambda mess: messageType(mess) == 'place')
+def gamePlace(message):
+    text = message.text
+    gm = getGame(message)
+    if text in gm.places:
+        gm.my_ans = text
+    else:
+        bot.send_message(message.from_user.id, 'Item is not found')
+
+@bot.message_handler(func=lambda mess: messageType(mess) == 'accuse')
+def gameAccuse(message):
+    text = message.text
+    gm = getGame(message)
+    if text in gm.people + gm.weapons + gm.places:
+        gm.now_chosen += [text]
+    else:
+        bot.send_message(message.from_user.id, 'Item is not found')
+
+@bot.message_handler(func=lambda mess: messageType(mess) == 'turn')
+def gameTurn(message):
+    text = message.text
+    gm = getGame(message)
+    gm.my_ans = text
+
+        
 @bot.message_handler()
 def catch(message):
-    id = message.from_user.id
-    pl = Player(User=message.from_user)
-    text = message.text
-    gm = personToGame.get(pl)
-
-    if gm is None:
-        return
-
-    if text in gm.places and gm.choose_place:
-        gm.my_ans = text
-        return
-    if text in ['Ask', 'Accuse', 'End turn'] and message.from_user.id == gm.players[gm.now].id:
-        gm.my_ans = text
-        return
-    if text in gm.people + gm.weapons + gm.places and message.from_user.id == gm.players[gm.now].id:
-        gm.now_chosen += [text]
-        return
-    if (text in gm.now_chosen or text == 'NO') and message.from_user.id == gm.players[gm.who].id:
-        gm.my_ans = text
-        return
+    sendAdmin("AAAAAAAAAAAA\nI am in 'catch' function. WHY?!&\nmessage is:\n" + message.text)
     return
 
+def getGame(User):#raise 'TypeError'
+    pl = User
+    if isinstance(pl, telebot.types.message):
+        pl = message.from_user
+    if isinstance(pl, telebot.types.User):
+        pl = Player(User = pl)
+    elif not isinstance(pl, Player):
+        raise TypeError
+    gm = personToGame.get(pl, None)
+    return gm
 
+def messageType(message):
+    gm = getGame(message)
+    
+    id = message.from_user.id
+    now_id = gm.players[gm.now].id
+    who = gm.who
+    who_id = gm.players[gm.who].id
+    if who != -1:
+        if id == who_id:
+            return 'answer'
+        else:
+            return 'ignore'
+    if id != now_id:
+        return 'ignore'
+        
+    if gm.asking:
+        return 'ask'
+    if gm.choose_place:
+        return 'place'
+    if gm.accusing:
+        return 'accuse'
+    if message.text in ['End turn', 'Ask', 'Accuse']
+        return 'turn'
+    
+    return 'ignore'
+        
 def playersList(gm):
     ans = []
     for elem in gm.players:
@@ -672,10 +737,11 @@ def answer(man, gm):
     pl = gm.players[man]
     cards = set(pl.cards)
     now = set(gm.now_chosen)
-    inter = now.intersection(cards)
+    gm.inter = now.intersection(cards)
 
-    if len(inter) == 0:
+    if len(gm.inter) == 0:
         bot.send_message(id, "Choose an answer: ", reply_markup=make(['NO']))
+        gm.inter = set(['NO'])
         while len(gm.my_ans) == 0:
             pass
         send_all(str(gm.players[man]) + " couldn't answer", gm, [gm.players[man].id])

@@ -591,7 +591,7 @@ def gameEnd(message):
 
 @bot.message_handler(commands=['rules'])
 def printRules(message):
-    bot.send_message(message.from_user.id, open('rules.txt', 'rt'))
+    bot.send_message(message.from_user.id, open('rules.txt', 'rt').read())
         
 @bot.message_handler(commands=['full_end'], func=fromAdmin)
 def botEnd(message):

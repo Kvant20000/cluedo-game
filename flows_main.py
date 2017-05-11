@@ -500,7 +500,7 @@ def start_game(message):
         new_thr.start()
 
 
-@bot.message_handler(commands=['help', 'start'])
+@bot.message_handler(commands=['help'])
 def helpMessege(message):
     # printLog('help from ' + str(message.from_user.id))
     pl = Player(User=message.from_user)
@@ -518,7 +518,7 @@ def use(message):
     bot.send_message(id, text)
 
 
-@bot.message_handler(commands=['status', 'active'])
+@bot.message_handler(commands=['status', 'active', 'start'])
 def status(message):
     print(message.text, len(games))
     id = message.from_user.id

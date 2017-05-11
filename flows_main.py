@@ -576,6 +576,7 @@ def gameEnd(message):
                 personToGame[pl] = None
             games[gm] = None
         games = []
+        cnt = 1
         broadcast("All the rooms are closed")
         return
     else:

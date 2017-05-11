@@ -565,7 +565,7 @@ def printCards(message):
 
 @bot.message_handler(commands=['end'])
 def gameEnd(message):
-    global games
+    global games, cnt
     pl = Player(User=message.from_user)
     if not (message.from_user.id in AdminId or getGame(pl) is None):
         bot.send_message(message.from_user.id, "Anton is a birch!")

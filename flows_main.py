@@ -589,6 +589,10 @@ def gameEnd(message):
         game_by_id[games[last_id].id] = last_id + 1
 
 
+@bot.message_handler(commands=['rules'])
+def printRules(message):
+    bot.send_message(message.from_user.id, open('rules.txt', 'rt'))
+        
 @bot.message_handler(commands=['full_end'], func=fromAdmin)
 def botEnd(message):
     printLog('end of bot')

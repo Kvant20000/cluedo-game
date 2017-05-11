@@ -687,7 +687,7 @@ def messageType(message):
         return 'place'
     if gm.accusing:
         return 'accuse'
-    if message.text in ['End turn', 'Ask', 'Accuse']
+    if message.text in ['End turn', 'Ask', 'Accuse']:
         return 'turn'
     
     return 'ignore'

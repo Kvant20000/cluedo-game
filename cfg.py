@@ -37,10 +37,10 @@ def cluedo_init():
 	weapons = ["Bat-Bogey hex", "Stupefy", "Petrificus totalus", "Cruciatus curse", "Killing curse", "Confundus charm"]
 	hp_deck = CluedoDeck(people, weapons, places)
 
-	people = ["Vasechka #1", "Vasechka #2", "Vasechka #3", "Vasechka #4", "Vaseckha #5", "Vaseckha #6", "Vaseckha #7", "Vaseckha #8", "Vaseckha #9"]
-	places = ["SPBAU", "ITMO", "MSU", "HSE", "MIPT", "middle of nowhere"]
-	weapons = ["Dijkstra algorithm", "DFS", "big, big treap", "CENSORED", "suffix tree", "very big segment tree"]
-	vasechka_deck = CluedoDeck(people, weapons, places)
+	#people = ["Vasechka #1", "Vasechka #2", "Vasechka #3", "Vasechka #4", "Vaseckha #5", "Vaseckha #6", "Vaseckha #7", "Vaseckha #8", "Vaseckha #9"]
+	#places = ["SPBAU", "ITMO", "MSU", "HSE", "MIPT", "middle of nowhere"]
+	#weapons = ["Dijkstra algorithm", "DFS", "big, big treap", "CENSORED", "suffix tree", "very big segment tree"]
+	#vasechka_deck = CluedoDeck(people, weapons, places)
 
-	decks = [normal_deck, hp_deck, vasechka_deck]
+	decks = [normal_deck, hp_deck]#, vasechka_deck]
 	cluedo_people, cluedo_weapons, cluedo_places = rd.choice(decks).get()

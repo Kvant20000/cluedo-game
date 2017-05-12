@@ -128,7 +128,7 @@ class Game:
     
     def deletePlayer(self, pl):
         if not self.started:
-            sefl.players.pop(self.players.index(pl))
+            self.players.pop(self.players.index(pl))
             return True
         else:
             return False

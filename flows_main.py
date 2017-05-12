@@ -816,7 +816,7 @@ def answer(man, gm):
         send_all(str(gm.players[man]) + " couldn't answer", gm, [gm.players[man].id])
         return False
     else:
-        bot.send_message(id, "Choose an answer: ", reply_markup=make(list(inter)))
+        bot.send_message(id, "Choose an answer: ", reply_markup=make(list(gm.inter)))
         while len(gm.my_ans) == 0:
             pass
         return True

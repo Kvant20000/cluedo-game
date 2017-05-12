@@ -647,6 +647,10 @@ def botEnd(message):
     print('full end')
     bot.stop_polling()
 
+@bot.message_handler(commands=['broadcast'], func=fromAdmin)
+def forAll(message):
+    broadcast(message.text)
+
 
 @bot.message_handler(func=lambda mess: getGame(mess) is None or messageType(mess) == 'ignore')
 def ignore(message):

@@ -455,7 +455,7 @@ def add_player(message):
         join_error(pl.id)
         return
 
-    if game_id > len(can) or game_id < 1:
+    if game_id > len(games) or game_id < 1:
         bot.send_message(pl.id, "No such game!")
         return
     
@@ -466,7 +466,7 @@ def add_player(message):
     gm.addPlayers(pl)
     personToGame[pl] = gm
     bot.send_message(pl.id, "You join " + str(gm))
-    send_all(str(gm) + ':\n' + playersToList(gm), gm, bad=[pl.id])
+    send_all(str(gm) + ':\n' + playersList(gm), gm, bad=[pl.id])
     if len(gm.players) == gm.max_players:
         start_game(message)
 
@@ -491,7 +491,7 @@ def add_to_game(message):
     personToGame[pl] = gm
     bot.send_message(pl.id, "You join game " + (str(gm)))
     try:
-        send_all(str(gm) + ":\n" + playersToList(gm), gm, bad=[pl.id])
+        send_all(str(gm) + ":\n" + playersList(gm), gm, bad=[pl.id])
     except:
         send_all(str(gm), gm, bad=[pl.id])
     if len(gm.players) == gm.max_players:
@@ -507,6 +507,7 @@ def deletePlayer(message):
     if gm.deletePlayer(pl):
         bot.send_message(pl.id, 'You have successfully left the room ' + str(gm))
         send_all(str(pl) + ' leaves the room', gm)
+        personToGame[pl] = None
     else:
         bot.send_message(pl.id, "The game has already started. You can't leave the room")
         

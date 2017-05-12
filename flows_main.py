@@ -444,7 +444,7 @@ def add_player(message):
     if personToGame.get(pl, None) is not None:
         bot.send_message(pl.id, 'You are already in the game')
         return
-
+    personToGame[pl] = None
     if not message.text.startswith('/join '):
         join_error(pl.id)
         return
@@ -651,7 +651,17 @@ def botEnd(message):
 def forAll(message):
     broadcast(message.text)
 
+@bot.message_handler(commands=['update'], func=fromAdmin)
+def update(message):
+    os.system('git pull')
+    sendAdmin('Git update')
+    os.system('screen python3 flows_main.py')
 
+@bot.message_handler(commands=['all'], func=fromAdmin)
+def allRegister(message):
+    for pl in personToGame.keys():
+        bot.send_message(message.from_user.id, str(pl))
+    
 @bot.message_handler(func=lambda mess: getGame(mess) is None or messageType(mess) == 'ignore')
 def ignore(message):
     pass

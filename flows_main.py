@@ -125,7 +125,14 @@ class Game:
 
     def addPlayers(self, pl):
         self.players += [pl]
-
+    
+    def deletePlayer(self, pl):
+        if not self.started:
+            sefl.players.pop(self.players.index(pl))
+            return True
+        else:
+            return False
+    
     def start(self):
         sendAdmin('Game ' + str(game_by_id[self.id]) + ' starts')
         rd.shuffle(self.players)
@@ -438,21 +445,12 @@ def add_player(message):
         bot.send_message(pl.id, 'You are already in the game')
         return
 
-    can = []
-    for gm in games:
-        if not gm.started:
-            can.append(gm)
-
-    if can == []:
-        addGame(message)
-        can = [games[-1]]
-
     if not message.text.startswith('/join '):
         join_error(pl.id)
         return
 
     try:
-        game_id = int(message.text[len('/join '):])
+        game_id = int(message.text[len('/join '):].replace('<', '').replace('>', ''))
     except:
         join_error(pl.id)
         return
@@ -460,12 +458,15 @@ def add_player(message):
     if game_id > len(can) or game_id < 1:
         bot.send_message(pl.id, "No such game!")
         return
-
-    gm = can[game_id - 1];
+    
+    gm = games[game_id - 1]
+    if gm.started:
+        bot.send_message(pl.id, "This game has already started")
+        return
     gm.addPlayers(pl)
     personToGame[pl] = gm
     bot.send_message(pl.id, "You join " + str(gm))
-    send_all(str(gm), gm, bad=[pl.id])
+    send_all(str(gm) + ':\n' + playersToList(gm), gm, bad=[pl.id])
     if len(gm.players) == gm.max_players:
         start_game(message)
 
@@ -473,10 +474,15 @@ def add_player(message):
 @bot.message_handler(func=lambda message: message.text[:6] == '/join_')
 def add_to_game(message):
     number = int(message.text[6:])
-    gm = games[number - 1]
+    try:
+        gm = games[number - 1]
+    except:
+        gm = None
+
     if gm is None:
         bot.send_message(message.from_user.id, "No such game")
         return
+
     pl = Player(User = message.from_user)
     if personToGame.get(pl, None) is not None:
         bot.send_message(pl.id, 'You are already in the game')
@@ -484,10 +490,24 @@ def add_to_game(message):
     gm.addPlayers(pl)
     personToGame[pl] = gm
     bot.send_message(pl.id, "You join game " + (str(gm)))
-    send_all(str(gm), gm, bad=[pl.id])
+    try:
+        send_all(str(gm) + ":\n" + playersToList(gm), gm, bad=[pl.id])
+    except:
+        send_all(str(gm), gm, bad=[pl.id])
     if len(gm.players) == gm.max_players:
         start_game(message)
 
+@bot.message_handler(commands=['leave'])
+def deletePlayer(message):
+    gm = getGame(message)
+    pl = Player(User=message.from_user)
+    if gm.deletePlayer(pl):
+        bot.send_message(pl.id, 'You have successfully left the room ' + str(gm))
+        send_all(str(pl) + ' leaves the room', gm)
+    else:
+        bot.send_message(pl.id, "The game has already started. You can't leave the room")
+        
+        
 @bot.message_handler(commands=['game'])
 def start_game(message):
     pl = Player(User=message.from_user)
@@ -500,33 +520,30 @@ def start_game(message):
         new_thr.start()
 
 
-@bot.message_handler(commands=['help'])
-def helpMessege(message):
-    # printLog('help from ' + str(message.from_user.id))
-    pl = Player(User=message.from_user)
-    personToGame[pl] = None
-    text = ('/help - see this message again\n/join - join the game\n@antonsa can tell you the rest')
-
-    bot.send_message(message.from_user.id, text)
-
-
-@bot.message_handler(commands=['how_use'])
-def use(message):
-    # printLog('how use from ')
-    id = message.from_user.id
-    text = ('/help - see this message again\n/join - join the game\n@antonsa can tell you the rest')
-    bot.send_message(id, text)
-
-
-@bot.message_handler(commands=['status', 'active', 'start'])
+@bot.message_handler(commands=['status', 'active'], func=fromAdmin)
 def status(message):
-    print(message.text, len(games))
+    print(message.text, len(games), 'admin')
     id = message.from_user.id
     ans = ''
     for gm in games:
         ans += gm.status() + '\n'
     if ans == '':
         ans = 'No games yet'
+    bot.send_message(id, ans)
+
+@bot.message_handler(commands=['status', 'active'])
+def status(message):
+    print(message.text, len(games))
+    id = message.from_user.id
+    ans = ''
+    tmp = 0
+    for gm in games:
+        if not gm.started and (tmp == 0 or len(gm.players) != 0):
+            ans += gm.status() + '\n'
+            tmp += (len(gm.players) == 0)
+
+    if ans == '':
+        ans = 'No suitable games'
     bot.send_message(id, ans)
 
 
@@ -537,7 +554,15 @@ def composition(message):
     if gm is None:
         bot.send_message(pl.id, 'Please, join any game')
         return
-    bot.send_message(pl.id, playersList(gm))
+    if not gm.started:
+        bot.send_message(pl.id, playersList(gm))
+    else:
+        ans = []
+        for elem in gm.players:
+            ans.append(str(elem) + ' is ' + elem.person)
+        if ans == []:
+            ans = ['No players yet']
+        bot.send_message(pl.id, ', '.join(ans))
 
 
 @bot.message_handler(commands=['cards'])
@@ -574,9 +599,11 @@ def gameEnd(message):
         for gm in range(len(games)):
             for pl in games[gm].players:
                 personToGame[pl] = None
-            games[gm] = None
-        games = []
-        cnt = 1
+                
+            last_id = game_by_id[gm.id] - 1
+            games[last_id] = Game()
+            game_by_id[games[last_id].id] = last_id + 1
+            
         broadcast("All the rooms are closed")
         return
     else:
@@ -590,10 +617,25 @@ def gameEnd(message):
         game_by_id[games[last_id].id] = last_id + 1
 
 
+
 @bot.message_handler(commands=['rules'])
 def printRules(message):
+    return
     bot.send_message(message.from_user.id, open('rules.txt', 'rt').read())
-        
+
+@bot.message_handler(commands=['help', 'how_use', 'start'])
+def littleHelpMessege(message):
+    text = ('/help - see this message again\n/full_help - see more help\n')
+    bot.send_message(message.from_user.id, text)
+
+@bot.message_handler(commands=['commands'])
+def myCommands(message):
+    bot.send_message(message.from_user.id, open('commands.txt', 'rt').read())
+
+@bot.message_handler(commands=['full_help'])
+def bigHelp(message):
+    bot.send_message(message.from_user.id, open('help.txt', 'rt').read())
+
 @bot.message_handler(commands=['full_end'], func=fromAdmin)
 def botEnd(message):
     printLog('end of bot')
@@ -602,12 +644,13 @@ def botEnd(message):
     print('full end')
     bot.stop_polling()
 
+
 @bot.message_handler(func=lambda mess: getGame(mess) is None or messageType(mess) == 'ignore')
 def ignore(message):
     pass
     return
-    
-    
+
+
 @bot.message_handler(func=lambda mess: messageType(mess) == 'answer')
 def gameAnswer(message):
     text = message.text
@@ -650,7 +693,10 @@ def gameTurn(message):
     gm = getGame(message)
     gm.my_ans = text
 
-        
+@bot.message_handler(func=lambda mess:mess.text[0] == '/')
+def invalidCommand(message):
+    bot.send_message(message.from_user.id, 'Invalid command')
+
 @bot.message_handler()
 def catch(message):
     sendAdmin("AAAAAAAAAAAA\nI am in 'catch' function. WHY?!&\nmessage is:\n" + message.text)
@@ -658,8 +704,8 @@ def catch(message):
 
 def getGame(User):#raise 'TypeError'
     pl = User
-    if isinstance(pl, telebot.types.message):
-        pl = message.from_user
+    if isinstance(pl, telebot.types.Message):
+        pl = pl.from_user
     if isinstance(pl, telebot.types.User):
         pl = Player(User = pl)
     elif not isinstance(pl, Player):
@@ -669,7 +715,7 @@ def getGame(User):#raise 'TypeError'
 
 def messageType(message):
     gm = getGame(message)
-    
+
     id = message.from_user.id
     now_id = gm.players[gm.now].id
     who = gm.who
@@ -681,7 +727,7 @@ def messageType(message):
             return 'ignore'
     if id != now_id:
         return 'ignore'
-        
+
     if gm.asking:
         return 'ask'
     if gm.choose_place:
@@ -690,9 +736,9 @@ def messageType(message):
         return 'accuse'
     if message.text in ['End turn', 'Ask', 'Accuse']:
         return 'turn'
-    
+
     return 'ignore'
-        
+
 def playersList(gm):
     ans = []
     for elem in gm.players:

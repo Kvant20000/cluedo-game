@@ -620,7 +620,6 @@ def gameEnd(message):
 
 @bot.message_handler(commands=['rules'])
 def printRules(message):
-    return
     bot.send_message(message.from_user.id, open('rules.txt', 'rt').read())
 
 @bot.message_handler(commands=['help', 'how_use', 'start'])

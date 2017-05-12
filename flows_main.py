@@ -567,7 +567,7 @@ def composition(message):
             ans.append(str(elem) + ' is ' + elem.person)
         if ans == []:
             ans = ['No players yet']
-        bot.send_message(pl.id, ', '.join(ans))
+        bot.send_message(pl.id, '\n'.join(ans))
 
 
 @bot.message_handler(commands=['cards'])
@@ -630,6 +630,7 @@ def printRules(message):
 @bot.message_handler(commands=['help', 'how_use', 'start'])
 def littleHelpMessege(message):
     text = ('/help - see this message again\n/full_help - see more help\n')
+    text += '''Firstly send /status, after it join any suitable room'''    
     bot.send_message(message.from_user.id, text)
 
 @bot.message_handler(commands=['commands'])

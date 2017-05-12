@@ -651,7 +651,7 @@ def botEnd(message):
 
 @bot.message_handler(commands=['broadcast'], func=fromAdmin)
 def forAll(message):
-    broadcast(message.text)
+    broadcast(message.text.replace('/broadcast ', '', 1))
 
 @bot.message_handler(commands=['update'], func=fromAdmin)
 def update(message):

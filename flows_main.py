@@ -501,6 +501,9 @@ def add_to_game(message):
 def deletePlayer(message):
     gm = getGame(message)
     pl = Player(User=message.from_user)
+    if gm is None:
+        bot.send_message(pl.id, 'You do not take part in any game')
+        return
     if gm.deletePlayer(pl):
         bot.send_message(pl.id, 'You have successfully left the room ' + str(gm))
         send_all(str(pl) + ' leaves the room', gm)

@@ -127,12 +127,14 @@ class Game:
         self.who = -1
 
     def addPlayers(self, pl):
+        sendAdmin(str(pl) + ' joined ' + str(self))
         self.players += [pl]
     
     def deletePlayer(self, pl):
         if not self.started:
             self.players.pop(self.players.index(pl))
             self.ready.discard(pl)
+            sendAdmin(str(pl) + ' leaves ' + str(self))
             return True
         else:
             return False

@@ -21,7 +21,8 @@ Admins = [telebot.types.User(id=186898465, username='antonsa', first_name='Anton
           telebot.types.User(id=319325008, username='greatkorn', first_name='Anton', last_name='Kvasha')]
 
 curr = 0
-
+readyKeyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
+readyKeyboard.row(telebot.types.KeyboardButton('Yes'), telebot.types.KeyboardButton('No'))
 
 class Player:
     def __init__(self, cards=[], id=186898465, username='antonsa', number=-1, first_name='Anton', last_name='Anikushin',
@@ -103,10 +104,11 @@ class Game:
         self.weapons = cfg.cluedo_weapons
         self.places = cfg.cluedo_places
         self.distance = cfg.cluedo_dist
-
+        
         self.id = int(rd.random() * 10000000)
 
         self.now = 0
+        self.ready = set()
         self.max_players = 6
         self.started = False
 
@@ -130,6 +132,7 @@ class Game:
     def deletePlayer(self, pl):
         if not self.started:
             self.players.pop(self.players.index(pl))
+            self.ready.discard(pl)
             return True
         else:
             return False
@@ -343,20 +346,11 @@ class Game:
     def who_killed(self):
         return self.ans
 
-    def keyboard(self, cards=True, ask=True, accuse=True, finish=True):
+    def keyboard(self):
         keys = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
-        if cards:
-            keys.row(telebot.types.KeyboardButton('Cards'))
-
-        if ask and accuse:
-            keys.row(telebot.types.KeyboardButton('Ask'), telebot.types.KeyboardButton('Accuse'))
-        elif ask:
-            keys.row(telebot.types.KeyboardButton('Ask'))
-        elif accuse:
-            keys.row(telebot.types.KeyboardButton('Accuse'))
-
-        if finish:
-            keys.row(telebot.types.KeyboardButton('End turn'))
+        keys.row(telebot.types.KeyboardButton('Cards'))
+        keys.row(telebot.types.KeyboardButton('Ask'), telebot.types.KeyboardButton('Accuse'))
+        keys.row(telebot.types.KeyboardButton('End turn'))
         return keys
 
     def open(self):
@@ -383,7 +377,7 @@ class Game:
 
 
 MAX_PLAYERS = 6
-bot = telebot.TeleBot(TOKEN)
+bot = telebot.TeleBot(TOKEN2)
 games = []
 
 personToGame = dict()
@@ -466,10 +460,8 @@ def add_player(message):
         return
     gm.addPlayers(pl)
     personToGame[pl] = gm
-    bot.send_message(pl.id, "You join " + str(gm))
+    bot.send_message(pl.id, "You join game " + str(gm), reply_markup=readyKeyboard)
     send_all(str(gm) + ':\n' + playersList(gm), gm, bad=[pl.id])
-    if len(gm.players) == gm.max_players:
-        start_game(message)
 
 
 @bot.message_handler(func=lambda message: message.text[:6] == '/join_')
@@ -490,13 +482,26 @@ def add_to_game(message):
         return
     gm.addPlayers(pl)
     personToGame[pl] = gm
-    bot.send_message(pl.id, "You join game " + (str(gm)))
+    bot.send_message(pl.id, "You join game " + str(gm), reply_markup=readyKeyboard)
     try:
         send_all(str(gm) + ":\n" + playersList(gm), gm, bad=[pl.id])
     except:
         send_all(str(gm), gm, bad=[pl.id])
-    if len(gm.players) == gm.max_players:
-        start_game(message)
+
+@bot.message_handler(func=lambda mess: messageType(mess) == 'ready')
+def readyGame(message):
+    gm = getGame(message)
+    pl = Player(User=message.from_user)
+    if gm is None:
+        bot.send_message(pl.id, 'You do not take part in any game')
+        return
+    if message.text == 'Yes':
+        gm.ready.add(pl)
+    else:
+        gm.ready.discard(pl)
+        
+    if gm.ready == set(gm.players):
+        send_all('All the players are ready to start', gm)
 
 @bot.message_handler(commands=['leave'])
 def deletePlayer(message):
@@ -521,9 +526,11 @@ def start_game(message):
         bot.send_message(pl.id, 'You do not take part in any game')
         return
     else:
-        new_thr = threading.Thread(name="Game " + str(gm), target=running, args=[gm])
-        new_thr.start()
-
+        if gm.ready == set(gm.players):
+            new_thr = threading.Thread(name="Game " + str(gm), target=running, args=[gm])
+            new_thr.start()
+        else:
+            bot.send_message(pl.id, "Not all players of the room ready to start.\nWait for them to start")
 
 @bot.message_handler(commands=['status', 'active'], func=fromAdmin)
 def status(message):
@@ -651,7 +658,7 @@ def botEnd(message):
 
 @bot.message_handler(commands=['broadcast'], func=fromAdmin)
 def forAll(message):
-    broadcast(message.text.replace('/broadcast ', '', 1))
+    broadcast(message.text)
 
 @bot.message_handler(commands=['update'], func=fromAdmin)
 def update(message):
@@ -734,7 +741,14 @@ def getGame(User):#raise 'TypeError'
 
 def messageType(message):
     gm = getGame(message)
-
+    if gm is None:
+        return 'ignore'
+        
+    if not gm.started:
+        if message.text in ['Yes', 'No']:
+            return 'ready'
+        return 'ignore'
+        
     id = message.from_user.id
     now_id = gm.players[gm.now].id
     who = gm.who

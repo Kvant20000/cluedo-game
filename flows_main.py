@@ -665,9 +665,14 @@ def forAll(message):
 @bot.message_handler(commands=['update'], func=fromAdmin)
 def update(message):
     os.system('git pull')
-    sendAdmin('Git update')
+    sendAdmin('Git update and run all')
     os.system('screen python3 flows_main.py')
 
+@bot.message_handler(commands=['upfile'], func=fromAdmin)
+def update(message):
+    os.system('git pull')
+    sendAdmin('Git update file')
+    
 @bot.message_handler(commands=['all'], func=fromAdmin)
 def allRegister(message):
     for pl in personToGame.keys():

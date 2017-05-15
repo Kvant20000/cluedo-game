@@ -4,6 +4,7 @@ cluedo_open = [0, 0, 0, 6, 6, 3, 6]#[0, 0, 0, 0, 2, 3, 0]
 cluedo_people = ["Miss Scarlett", "Professor Plum", "Lady Peacock", "Mr. Green", "Colonel Mustard", "Mrs. White"]
 cluedo_places = ["kitchen", "ballroom", "conservatory",  "billiard room", "library", "study", "lounge", "hall", "dining room"]
 cluedo_weapons = ["candlestick", "dagger", "lead pipe", "revolver", "rope", "wrench"]
+cluedo_deck_list = ['normal']
 
 cluedo_dist =  [[ 0,  4,  9,  9,  9,  0,  8,  9,  5],
                 [ 4,  0,  7,  7,  7, 10,  6,  9,  6],
@@ -47,4 +48,5 @@ def cluedo_init():
     starWars_deck = CluedoDeck(people, places, weapons)
 
     decks = [normal_deck, hp_deck, starWars_deck]#, vasechka_deck]
+    cluedo_deck_list = ['normal', 'Harry Potter', 'Star Wars']#, vasechka_deck]
     cluedo_people, cluedo_weapons, cluedo_places = rd.choice(decks).get()

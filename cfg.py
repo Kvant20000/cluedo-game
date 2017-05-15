@@ -26,7 +26,7 @@ class CluedoDeck:
         return self.people, self.weapons, self.places
 
 def cluedo_init():
-    global cluedo_people, cluedo_places, cluedo_weapons
+    global cluedo_people, cluedo_places, cluedo_weapons, cluedo_deck_list
     people = ["Miss Scarlett", "Professor Plum", "Lady Peacock", "Mr. Green", "Colonel Mustard", "Mrs. White"]
     places = ["kitchen", "ballroom", "conservatory",  "billiard room", "library", "study", "lounge", "hall", "dining room"]
     weapons = ["candlestick", "dagger", "lead pipe", "revolver", "rope", "wrench"]

@@ -669,17 +669,17 @@ def update(message):
     os.system('screen python3 flows_main.py')
 
 @bot.message_handler(commands=['run'], func=fromAdmin)
-def update(message):
+def runCode(message):
     sendAdmin('Rerun all code')
     os.system('screen python3 flows_main.py')    
 
 @bot.message_handler(commands=['deck'], func=fromAdmin)
-def update(message):
+def printDecks(message):
     cfg.cluedo_init()
     bot.send_message(message.from_user.id, *cfg.cluedo_deck_list)
     
 @bot.message_handler(commands=['upfile'], func=fromAdmin)
-def update(message):
+def updateFiles(message):
     os.system('git pull')
     sendAdmin('Git update file')
     

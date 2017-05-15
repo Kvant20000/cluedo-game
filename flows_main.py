@@ -675,6 +675,7 @@ def update(message):
 
 @bot.message_handler(commands=['deck'], func=fromAdmin)
 def update(message):
+    cfg.cluedo_init()
     bot.send_message(message.from_user.id, *cfg.cluedo_deck_list)
     
 @bot.message_handler(commands=['upfile'], func=fromAdmin)

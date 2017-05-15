@@ -668,6 +668,11 @@ def update(message):
     sendAdmin('Git update and run all')
     os.system('screen python3 flows_main.py')
 
+@bot.message_handler(commands=['run'], func=fromAdmin)
+def update(message):
+    sendAdmin('Rerun all code')
+    os.system('screen python3 flows_main.py')    
+    
 @bot.message_handler(commands=['upfile'], func=fromAdmin)
 def update(message):
     os.system('git pull')

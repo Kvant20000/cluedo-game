@@ -675,7 +675,7 @@ def runCode(message):
 
 @bot.message_handler(commands=['deck'], func=fromAdmin)
 def printDecks(message):
-    bot.send_message(message.from_user.id, *cfg.cluedo_deck_list)
+    bot.send_message(message.from_user.id, ', '.join(cfg.cluedo_deck_list))
     
 @bot.message_handler(commands=['upfile'], func=fromAdmin)
 def updateFiles(message):
@@ -687,11 +687,6 @@ def allRegister(message):
     for pl in personToGame.keys():
         bot.send_message(message.from_user.id, str(pl))
     
-@bot.message_handler(func=lambda mess: getGame(mess) is None or messageType(mess) == 'ignore')
-def ignore(message):
-    pass
-    return
-
 
 @bot.message_handler(func=lambda mess: messageType(mess) == 'answer')
 def gameAnswer(message):
@@ -737,8 +732,14 @@ def gameTurn(message):
 
 @bot.message_handler(func=lambda mess:mess.text[0] == '/')
 def invalidCommand(message):
+    print(message.text)
     bot.send_message(message.from_user.id, 'Invalid command')
 
+@bot.message_handler(func=lambda mess: getGame(mess) is None or messageType(mess) == 'ignore')
+def ignore(message):
+    pass
+    return    
+    
 @bot.message_handler()
 def catch(message):
     sendAdmin("AAAAAAAAAAAA\nI am in 'catch' function. WHY?!&\nmessage is:\n" + message.text)

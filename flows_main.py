@@ -675,7 +675,6 @@ def runCode(message):
 
 @bot.message_handler(commands=['deck'], func=fromAdmin)
 def printDecks(message):
-    cfg.cluedo_init()
     bot.send_message(message.from_user.id, *cfg.cluedo_deck_list)
     
 @bot.message_handler(commands=['upfile'], func=fromAdmin)
@@ -915,6 +914,7 @@ def dist(place1, place2, gm):
 
 def main():
     global file_name
+    cfg.cluedo_init()
     file_name = logName()
     loggs = open(file_name, "w")
     loggs.close()

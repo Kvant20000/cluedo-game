@@ -672,6 +672,10 @@ def update(message):
 def update(message):
     sendAdmin('Rerun all code')
     os.system('screen python3 flows_main.py')    
+
+@bot.message_handler(commands=['deck'], func=fromAdmin)
+def update(message):
+    bot.send_message(message.from_user.id, *cfg.cluedo_deck_list)
     
 @bot.message_handler(commands=['upfile'], func=fromAdmin)
 def update(message):

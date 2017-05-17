@@ -646,6 +646,15 @@ def composition(message):
         ans.append(str(elem) + ' is ' + elem.person + ' ' + elem.place)
     bot.send_message(pl.id, '\n'.join(ans))
 
+@bot.message_handler(commands=['turn'])
+def WhoseTurn(message):
+    pl = Player(User=message.from_user)
+    gm = getGame(pl)
+    if gm is None:
+        bot.send_message(pl.id, 'Please, join any game')
+        return
+    bot.send_message(pl.id, gm.players[gm.now])
+    
 @bot.message_handler(commands=['cards'])
 @bot.message_handler(func=lambda message: message.text == 'Cards')
 def printCards(message):
@@ -788,7 +797,7 @@ def gameAccuse(message):
     else:
         bot.send_message(message.from_user.id, 'Item is not found')
 
-@bot.message_handler(func=lambda mess: messageType(mess) == 'turn')
+@bot.message_handler(func=lambda mess: messageType(mess) == 'action')
 def gameTurn(message):
     text = message.text
     gm = getGame(message)
@@ -849,7 +858,7 @@ def messageType(message):
     if gm.accusing:
         return 'accuse'
     if message.text in ['End turn', 'Ask', 'Accuse']:
-        return 'turn'
+        return 'action'
 
     return 'ignore'
 

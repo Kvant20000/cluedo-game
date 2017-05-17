@@ -187,6 +187,8 @@ class Game:
     def game(self):
         while not self.won:
             while not self.players[self.now].alive or self.players[self.now].auto:
+                if self.players[self.now].auto and self.players[self.now].alive:
+                    send_all(self.players[self.now] + ' in afk mode, skips a move')
                 self.now = (self.now + 1) % self.n
 
             send_turn(self.players[self.now], self)

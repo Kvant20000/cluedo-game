@@ -723,7 +723,7 @@ def myCommands(message):
 def bigHelp(message):
     bot.send_message(message.from_user.id, open('help.txt', 'rt').read())
 
-@bot.send_message(commands=['feedback'])
+@bot.message_handler(commands=['feedback'])
 def feedback(message):
     sendAdmin(message.text.replace('/feedback', '', 1))
     

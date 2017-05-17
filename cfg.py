@@ -45,7 +45,7 @@ def cluedo_init():
     people = ['Darth Vader', 'Mace Windu', 'Yoda', 'Obi-Wan «Ben» Kenobi', 'Luke Skywalker', 'Leia Organa Solo']
     places = ['Naboo', 'Tatooine', 'Coruscant', 'Alderaan', 'Yavin 4', 'Kamino', 'Corellia', 'Dantooine', 'Kessel']
     weapons = ['lightsaber', 'blaster', 'thermal detonator', 'proton torpedoes', 'shotguns', 'bowcaster']
-    starWars_deck = CluedoDeck(people, places, weapons)
+    starWars_deck = CluedoDeck(people, weapons, places)
 
     decks = [normal_deck, hp_deck, starWars_deck]#, vasechka_deck]
     cluedo_deck_list = ['normal', 'Harry Potter', 'Star Wars']#, vasechka_deck]

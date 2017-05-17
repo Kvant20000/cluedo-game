@@ -435,7 +435,7 @@ class Game:
         return cnt != 0
         
 MAX_PLAYERS = 6
-bot = telebot.TeleBot(TOKEN2)
+bot = telebot.TeleBot(TOKEN)
 games = []
 
 personToGame = dict()

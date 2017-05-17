@@ -435,7 +435,7 @@ class Game:
         return cnt != 0
         
 MAX_PLAYERS = 6
-bot = telebot.TeleBot(TOKEN2)
+bot = telebot.TeleBot(TOKEN)
 games = []
 
 personToGame = dict()
@@ -723,6 +723,10 @@ def myCommands(message):
 def bigHelp(message):
     bot.send_message(message.from_user.id, open('help.txt', 'rt').read())
 
+@bot.send_message(commands=['feedback'])
+def feedback(message):
+    sendAdmin(message.text.replace('/feedback', '', 1))
+    
 @bot.message_handler(commands=['full_end'], func=fromAdmin)
 def botEnd(message):
     printLog('end of bot')

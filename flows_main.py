@@ -467,7 +467,7 @@ def join_error(id):
     bot.send_message(id, 'Invalid command, please try again!')
     return
 
-@bot.message_handler(commands=['auto'])
+#@bot.message_handler(commands=['auto'])
 def setAuto(message):
     gm = getGame(message)
     if gm is None:
@@ -594,7 +594,11 @@ def start_game(message):
             new_thr = threading.Thread(name="Game " + str(gm), target=running, args=[gm])
             new_thr.start()
         else:
-            bot.send_message(pl.id, "Not all players of the room ready to start.\nWait for them to start")
+            ans = []
+            for i in gm.players:
+            	if i not in gm.ready:
+            		ans += [str(i)]
+            bot.send_message(pl.id, "Not all players of the room ready to start.\nWait for them to start: " + ', '.join(ans))
 
 @bot.message_handler(commands=['status', 'active'], func=fromAdmin)
 def status(message):
@@ -635,7 +639,10 @@ def composition(message):
 def composition(message):
     pl = Player(User=message.from_user)
     gm = getGame(pl)
-    bot.send_message(pl.id, playersList(gm))
+    ans = []
+    for elem in gm.players:
+        ans.append(str(elem) + ' is ready' * (elem in gm.ready))
+    bot.send_message(pl.id, '\n'.join(ans))
     
 @bot.message_handler(commands=['players'], func=lambda mess: getGame(mess).started)
 def composition(message):
@@ -643,7 +650,7 @@ def composition(message):
     gm = getGame(pl)
     ans = []
     for elem in gm.players:
-        ans.append(str(elem) + ' is ' + elem.person + ' ' + elem.place)
+        ans.append(str(elem) + ' is ' + elem.person + ' ' + elem.place + (' is afk') * elem.auto)
     bot.send_message(pl.id, '\n'.join(ans))
 
 @bot.message_handler(commands=['turn'])

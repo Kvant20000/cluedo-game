@@ -93,9 +93,6 @@ class Player:
     def knownCards(self):
         return self.know
 
-    def data(self):
-        return self.cards + [self.username, self.id]
-
 
 class Game:
     def __init__(self):
@@ -812,7 +809,12 @@ def gameAccuse(message):
 def gameTurn(message):
     text = message.text
     gm = getGame(message)
-    gm.my_ans = text
+    if text.lowercase().replace('/', '') == 'ask':
+        gm.my_ans = 'Ask'
+    if text.lowercase().replace('/', '') == 'accuse':
+        gm.my_ans = 'Accuse'
+    if text.lowercase().replace('/', '') in ['end turn', 'end_turn']:
+        gm.my_ans = 'End turn'
 
 @bot.message_handler(func=lambda mess:mess.text[0] == '/')
 def invalidCommand(message):
@@ -868,7 +870,7 @@ def messageType(message):
         return 'place'
     if gm.accusing:
         return 'accuse'
-    if message.text in ['End turn', 'Ask', 'Accuse']:
+    if message.text.lowercase().replace('/', '') in ['end turn', 'ask', 'accuse', 'end_turn']:
         return 'action'
 
     return 'ignore'

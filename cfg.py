@@ -53,7 +53,7 @@ def cluedo_init():
 
     people = ['Indy', 'Han Solo', 'Rick Deckard', 'Dr. Richard Kimble', 'John Book', 'Colonel Graff']
     places = ['in Egypt', 'in the Temple of Doom', 'in Alexandretta', 'in Los Angeles', 'in Lancaster County', 'in Chicago', 'a long time ago in a galaxy far, far away...', 'on Eros', 'on Lusitania']
-    weapons = ['whip', 'blaster', 'shotgun', 'pistol', 'airplane', 'small child'
+    weapons = ['whip', 'blaster', 'shotgun', 'pistol', 'airplane', 'small child']
     Harrison_Ford_deck = CluedoDeck(people, weapons, places)
     
     decks = [classic_deck, Harry_Potter_deck, Star_Wars_deck, Harrison_Ford_deck]#, vasechka_deck]

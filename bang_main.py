@@ -11,6 +11,7 @@ import random as rd
 from copy import deepcopy
 import cfg
 import threading
+from cfg import BangCard as Card
 
 TOKEN = "303602093:AAGz6ihk895s3K07vYqc6eBY8InFwX4YuhQ"
 TOKEN2 = "286496122:AAGED92TDcccXHGJmgyz5oJcCcZ4TI-vTrM"
@@ -93,34 +94,17 @@ class Player:
 
 class Game:
     def __init__(self):
-        cfg.cluedo_init()
-        self.am_open = cfg.cluedo_open
-        self.people = cfg.cluedo_people
-        self.weapons = cfg.cluedo_weapons
-        self.places = cfg.cluedo_places
-        self.distance = cfg.cluedo_dist
-        
         self.id = int(rd.random() * 10000000)
 
         self.now = 0
         self.ready = set()
-        self.max_players = 6
+        self.max_players = 7
         self.started = False
 
         self.won = False
-        self.asking = False
-        self.accusing = False
-        self.asked = False
-        self.choose_place = False
-
-        self.ans = (rd.choice(self.people), rd.choice(self.weapons), rd.choice(self.places))  # the answer
         self.players = []
 
-        self.my_ans = ''
-        self.now_chosen = []
-        self.inter = set()
-        self.who = -1
-
+        
     def addPlayers(self, pl):
         sendAdmin(str(pl) + ' joined ' + str(self))
         self.players += [pl]
@@ -141,18 +125,13 @@ class Game:
         n = len(self.players)
         self.alive = n
         self.n = n
-        deck = self.people + self.weapons + self.places
-        for i in self.ans:
-            deck.remove(i)
-        rd.shuffle(deck)
+        
+        cfg.bang_init()
+        self.roles = cfg.bang_roles[:n]
+        self.deck = rd.shuffle(rd.shuffle(cfg.bang_deck))
+       
+        other = deepcopy(self.roles)
 
-        self.opencards = deck[:self.am_open[n]]
-
-        self.startPrint()
-
-        other = deepcopy(self.people)
-
-        am_per_player = (len(deck) - self.am_open[n]) // n
         for i in range(n):
             self.players[i].number = i
             self.players[i].setCards(

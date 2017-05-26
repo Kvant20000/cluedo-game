@@ -11,7 +11,13 @@ from copy import deepcopy
 import cfg
 
 TOKEN = "303602093:AAGz6ihk895s3K07vYqc6eBY8InFwX4YuhQ"
-TOKEN2 = "314275855:AAEA4Z-sF5E213qVm38VE2CJ8d8dVV6dZCg"
+TOKEN_2 = "286496122:AAGED92TDcccXHGJmgyz5oJcCcZ4TI-vTrM"
+MAX_GAMES = 10
+
+###
+bot = telebot.TeleBot(TOKEN)
+###
+
 
 AdminId = [186898465, 319325008]
 Admins = [telebot.types.User(id = 186898465, username = 'antonsa', first_name = 'Anton', last_name = 'Anikushin'), telebot.types.User(id = 319325008, username = 'greatkorn', first_name = 'Anton', last_name = 'Kvasha')]
@@ -305,7 +311,6 @@ class Game:
         return False
 
 MAX_PLAYERS = 6
-bot = telebot.TeleBot(TOKEN)
 GAME = None
 players = []
 #FINISHED = False

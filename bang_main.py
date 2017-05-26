@@ -22,7 +22,7 @@ AdminId = [186898465, 319325008]
 Admins = [telebot.types.User(id=186898465, username='TwoBlueCats', first_name='Anton', last_name='Anikushin'),
           telebot.types.User(id=319325008, username='greatkorn', first_name='Anton', last_name='Kvasha')]
 
-common_cards = ["bang", "miss", "bear", "saloon", "shop", "take", "panic", "tnn", "duel", "gatling", "indeans"]
+common_cards = ["bang", "miss", "beer", "saloon", "shop", "draw", "panic", "tnn", "duel", "gatling", "indeans"]
 special_cards = ["weapon", "mustang", "zoom", "barrel", "prison", "dynamite"]
 
 deck = []
@@ -49,6 +49,7 @@ class Player:
         self.person = 'observer'
         self.mx_hp = 4
         self.hp = 4
+        self.status = 1
 
     def __str__(self):
         if str(self.username) == '':
@@ -90,6 +91,7 @@ class Player:
         self.cards.append(card)
 
     def delCard(self, card):
+        used.push_back(self.cards[self.cards.index(card)])
         self.cards.pop(self.cards.index(card))
 
     def addActive(self, cards):
@@ -101,6 +103,13 @@ class Player:
     def cardsInHand(self):
         return ', '.join(self.cards)
 
+    def draw_card(self):
+        if len(deck) == 0:
+            deck = used
+            rd.shuffle(deck)
+        self.addCard(deck[0])
+        deck.pop()
+
 
 class Game:
     def __init__(self):
@@ -109,13 +118,13 @@ class Game:
         self.max_players = 7
         self.started = False
         self.end = False
+        self.now = 0
 
         self.players = []
 
 
     def add_player(self, P):
         self.players += [p]
-
 
     def start(self):
         self.deck = 50 * ["bang"] + 50 * ["miss"]
@@ -141,16 +150,49 @@ class Game:
 
     def game(self):
         while not self.end:
-            while not self.players[self.now].alive:
+            while not self.players[self.now].status:
                 self.now = (self.now + 1) % self.n
-
             self.end = self.turn()
 
             self.now = (self.now + 1) % self.n
         return
 
+    def check_death(person):
+    if person.hp == 0 and "beer" in person.cards():
+        send_message(person.id, "You must use beer to stay alive")
+        person.hp += 1
+        person.delCard("beer")
+        return False
+    else:
+        return True
+
+    def bang(person1):
+        send_message(person1.id, "You can shoot at: ", reply_markup = make(game.players))
+        person2 = curr_ans
+        if "miss" in person2.cards():
+            send_message(person2.id, "You have {0} hp. Do you want to use miss?".format(person2.hp))
+            bot.send_message(person2.id, "Choose yes/no: ", reply_markup = make(["Yes", "No"]))
+            if curr_ans == "Yes":
+                person2.delCard("miss")
+            else
+                person2.hp -= 1
+                if check_death(person2):
+                    person2.status = 0
+        else:
+            person2.hp -= 1
+            if check_death(person2):
+                person2.status = 0
+        person1.delCard("bang")
+
     def turn(self):
         print("Now it is player № " + str(self.now) + ' turn')
+        P = players[self.now]
+        P.draw_card()
+        P.draw_card()
+
+        send_message(P.id, "Cards in you hand: ", reply_markup = make(P.cards))
+        exec(curr_ans + "(P)")
+
         return False
         #'return True' if game is finished
 
@@ -208,6 +250,26 @@ def logName():
     return log
 
 
+def make(arr, one_time=True):
+    arr = list(arr)
+    now = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
+    i = 0
+    while i + 3 <= len(arr):
+        now.row(telebot.types.KeyboardButton(arr[i]), telebot.types.KeyboardButton(arr[i + 1]),
+                telebot.types.KeyboardButton(arr[i + 2]))
+        i += 3
+    n = len(arr)
+    d = n - i
+    if d == 0:
+        return now
+    elif d == 1:
+        now.row(telebot.types.KeyboardButton(arr[i + 0]))
+        return now
+    elif d == 2:
+        now.row(telebot.types.KeyboardButton(arr[i + 0]), telebot.types.KeyboardButton(arr[i + 1]))
+        return now
+
+
 def main():
     global file_name, game
     cfg.bang_init()
@@ -218,7 +280,6 @@ def main():
     game = Game()
     sendAdmin('Bot starts')
     bot.polling()
-
 
 if __name__ == '__main__':
     main()

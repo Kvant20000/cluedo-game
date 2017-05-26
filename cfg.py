@@ -67,13 +67,5 @@ BANG
 '''    
     
 bang_roles = ['the Sheriff', 'the Renegade', 'the Bandit', 'the Bandit', 'the Assistant', 'the Bandit', 'the Assistant']
-bang_deck = []
-bang_persons = []
-class BangCard():
-    def __init__(self, name, suit, number):
-        self.name = name
-        self.suit = suit
-        self.num = number
-
 def bang_init():
     pass

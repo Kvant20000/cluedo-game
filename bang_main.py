@@ -98,6 +98,7 @@ class Player:
         self.active.append(card)
 
     def delActive(self, cards):
+        used.push_back(self.cards[self.cards.index(card)])
         self.active.pop(self.active.index(card))
 
     def cardsInHand(self):
@@ -108,7 +109,7 @@ class Player:
             deck = used
             rd.shuffle(deck)
         self.addCard(deck[0])
-        deck.pop()
+        deck.pop(0)
 
 
 class Game:
@@ -127,6 +128,7 @@ class Game:
         self.players += [p]
 
     def start(self):
+        global deck
         self.deck = 50 * ["bang"] + 50 * ["miss"]
         rd.shuffle(self.deck)
         self.n = len(self.players)
@@ -146,7 +148,7 @@ class Game:
                 pl.hp += 1
             pl.setCards(deck[last:last + pl.mx_hp])
             last += pl.mx_hp
-
+        deck = self.deck[last:]
 
     def game(self):
         while not self.end:
@@ -158,13 +160,13 @@ class Game:
         return
 
     def check_death(person):
-    if person.hp == 0 and "beer" in person.cards():
-        send_message(person.id, "You must use beer to stay alive")
-        person.hp += 1
-        person.delCard("beer")
-        return False
-    else:
-        return True
+        if person.hp == 0 and "beer" in person.cards():
+            send_message(person.id, "You must use beer to stay alive")
+            person.hp += 1
+            person.delCard("beer")
+            return False
+        else:
+            return True
 
     def bang(person1):
         send_message(person1.id, "You can shoot at: ", reply_markup = make(game.players))
@@ -191,7 +193,7 @@ class Game:
         P.draw_card()
 
         send_message(P.id, "Cards in you hand: ", reply_markup = make(P.cards))
-        exec(curr_ans + "(P)")
+        exec("self." + curr_ans + "(P)")
 
         return False
         #'return True' if game is finished

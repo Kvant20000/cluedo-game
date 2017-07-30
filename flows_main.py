@@ -30,6 +30,7 @@ Admins = [telebot.types.User(id=186898465, username='antonsa', first_name='Anton
 curr = 0
 readyKeyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
 readyKeyboard.row(telebot.types.KeyboardButton('Yes'), telebot.types.KeyboardButton('No'))
+#removeKeyboard = telebot.types.ReplyKeyboardRemove()
 
 class Player:
     def __init__(self, cards=[], id=186898465, username='antonsa', number=-1, first_name='Anton', last_name='Anikushin',
@@ -501,7 +502,7 @@ def setAuto(message):
         send_all(str(pl) + ' alive again', gm)
     pl.auto ^= True
 
-@bot.message_handler(commands=['full_end'], func=fromAdmin)
+@bot.message_handler(commands=['full_end', 'restart'], func=fromAdmin)
 def botEnd(message):
     printLog('end of bot')
     broadcast('The bot has stopped. Game over. Sorry:(')
@@ -510,8 +511,14 @@ def botEnd(message):
     bot.stop_polling()
     exit(0)
     
+@bot.message_handler(commands=['log'], func=fromAdmin)
+def sendLog(message):
+    try:
+        bot.send_document(message.from_user.id, open(file_name, "rb"))
+    except Exception as error:
+        bot.send_message(message.from_user.id, "Error in sending file" + ": " + str(error))
     
-@bot.message_handler(commands=['new_game'], func=fromAdmin)
+@bot.message_handler(commands=['new_game'])
 def addGame(message):
     global cnt
 
@@ -549,6 +556,14 @@ def add_player(message):
         return
     
     gm = games[game_id - 1]
+    if gm is None:
+        sendAdmin("Something goes wrong in joining to game. Game does not exist")
+        printLog("Game number = game_id")
+        sendAdmin("I reInit this game")
+        
+        games[game_id] = Game()
+        game_by_id[games[game_id].id] = game_id + 1
+        
     if gm.started:
         bot.send_message(pl.id, "This game has already started")
         return
@@ -577,10 +592,7 @@ def add_to_game(message):
     gm.addPlayers(pl)
     personToGame[pl] = gm
     bot.send_message(pl.id, "You join game " + str(gm), reply_markup=readyKeyboard)
-    try:
-        send_all(str(gm) + ":\n" + playersList(gm), gm, bad=[pl.id])
-    except:
-        send_all(str(gm), gm, bad=[pl.id])
+    send_all(str(gm) + ":\n" + playersList(gm), gm, bad=[pl.id])
 
 @bot.message_handler(func=lambda mess: messageType(mess) == 'ready')
 def readyGame(message):
@@ -647,13 +659,16 @@ def status(message):
     id = message.from_user.id
     ans = ''
     tmp = 0
+    ind = 0
     for gm in games:
+        sendAdmin("Game {} does not exist".format(ind))
+        
         if not gm.started and (tmp == 0 or len(gm.players) != 0):
             ans += gm.status() + '\n'
             tmp += (len(gm.players) == 0)
-
+        ind += 1
     if ans == '':
-        ans = 'No suitable games'
+        ans = 'No suitable games\nYou can start new(see /full_help)'
     bot.send_message(id, ans)
 
 
@@ -665,7 +680,7 @@ def composition(message):
         bot.send_message(pl.id, 'Please, join any game')
         return
         
-@bot.message_handler(commands=['players'], func=lambda mess: not getGame(mess).started)
+@bot.message_handler(commands=['players'], func=lambda mess: getGame(mess) is not None and not getGame(mess).started)
 def composition(message):
     pl = Player(User=message.from_user)
     gm = getGame(pl)
@@ -674,7 +689,7 @@ def composition(message):
         ans.append(str(elem) + ' is ready' * (elem in gm.ready))
     bot.send_message(pl.id, '\n'.join(ans))
     
-@bot.message_handler(commands=['players'], func=lambda mess: getGame(mess).started)
+@bot.message_handler(commands=['players'], func=lambda mess: getGame(mess) is not None and getGame(mess).started)
 def composition(message):
     pl = Player(User=message.from_user)
     gm = getGame(pl)
@@ -968,7 +983,7 @@ def printLog(text):
 
 
 def logName():
-    log = "game of "
+    log = "game_of_"
     today = time.gmtime()
     year = today.tm_year
     month = today.tm_mon
@@ -976,7 +991,7 @@ def logName():
     hour = today.tm_hour
     minute = today.tm_min
     seconds = today.tm_sec
-    log += "0" * (day < 10) + str(day) + '.' + "0" * (month < 10) + str(month) + '.' + "0" * (year < 10) + str(year) + ' ' + str(hour) + ';' + str(minute) + ';' + str(seconds) + '.txt'
+    log += "0" * (day < 10) + str(day) + '_' + "0" * (month < 10) + str(month) + '_' + str(year) + '__' + "0" * (hour < 10) + str(hour) + '_' + "0" * (minute < 10) + str(minute) + '_' + "0" * (seconds < 10) + str(seconds) + '.txt'
     return log
 
 

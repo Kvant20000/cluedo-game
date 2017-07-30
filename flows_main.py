@@ -12,9 +12,16 @@ from copy import deepcopy
 import cfg
 import threading
 
+
+
 TOKEN = "303602093:AAGz6ihk895s3K07vYqc6eBY8InFwX4YuhQ"
 TOKEN2 = "286496122:AAGED92TDcccXHGJmgyz5oJcCcZ4TI-vTrM"
 MAX_GAMES = 10
+
+MAX_PLAYERS = 6
+bot = telebot.TeleBot(TOKEN)
+games = []
+
 
 AdminId = [186898465, 319325008]
 Admins = [telebot.types.User(id=186898465, username='antonsa', first_name='Anton', last_name='Anikushin'),
@@ -431,9 +438,6 @@ class Game:
                 cnt += 1
         return cnt != 0
         
-MAX_PLAYERS = 6
-bot = telebot.TeleBot(TOKEN)
-games = []
 
 personToGame = dict()
 game_by_id = dict()
@@ -441,15 +445,35 @@ cnt = 1
 
 
 def running(gm):
-    gm.start()
-    gm.game()
+    try:
+        gm.start()
+    except Exception as error:
+        printLog("Fail in game starting")
+        sendAdmin("Fail in game starting")
+    else:    
+        try:
+            gm.game()
+        except:
+            printLog("Fail in game starting")
+            sendAdmin("Fail in game starting")            
+        
     for play in gm.players:
         personToGame[play] = None
     last_id = game_by_id[gm.id] - 1
     games[last_id] = Game()
     game_by_id[games[last_id].id] = last_id + 1
 
-
+    
+def lowercase(s):
+        ans = ""
+        for i in s:
+            if ord('A') <= ord(i) and ord(i) <= ord('Z'):
+                ans += chr(ord(i) - ord('A') + ord('a'))
+            else:
+                ans += i
+        return ans
+    
+    
 file_name = 'logs.txt'
 
 #@bot.message_handler()
@@ -476,6 +500,15 @@ def setAuto(message):
     else:
         send_all(str(pl) + ' alive again', gm)
     pl.auto ^= True
+
+@bot.message_handler(commands=['full_end'], func=fromAdmin)
+def botEnd(message):
+    printLog('end of bot')
+    broadcast('The bot has stopped. Game over. Sorry:(')
+    sendAdmin('The bot has stopped. Game over. Sorry:(')
+    print('full end')
+    bot.stop_polling()
+    exit(0)
     
     
 @bot.message_handler(commands=['new_game'], func=fromAdmin)
@@ -593,8 +626,8 @@ def start_game(message):
         else:
             ans = []
             for i in gm.players:
-            	if i not in gm.ready:
-            		ans += [str(i)]
+                if i not in gm.ready:
+                    ans += [str(i)]
             bot.send_message(pl.id, "Not all players of the room ready to start.\nWait for them to start: " + ', '.join(ans))
 
 @bot.message_handler(commands=['status', 'active'], func=fromAdmin)
@@ -731,14 +764,6 @@ def bigHelp(message):
 def feedback(message):
     sendAdmin(message.text.replace('/feedback', '', 1))
     
-@bot.message_handler(commands=['full_end'], func=fromAdmin)
-def botEnd(message):
-    printLog('end of bot')
-    broadcast('The bot has stopped. Game over. Sorry:(')
-    sendAdmin('The bot has stopped. Game over. Sorry:(')
-    print('full end')
-    bot.stop_polling()
-
 @bot.message_handler(commands=['broadcast'], func=fromAdmin)
 def forAll(message):
     broadcast(message.text)
@@ -809,11 +834,11 @@ def gameAccuse(message):
 def gameTurn(message):
     text = message.text
     gm = getGame(message)
-    if text.lowercase().replace('/', '') == 'ask':
+    if lowercase(text).replace('/', '') == 'ask':
         gm.my_ans = 'Ask'
-    if text.lowercase().replace('/', '') == 'accuse':
+    if lowercase(text).replace('/', '') == 'accuse':
         gm.my_ans = 'Accuse'
-    if text.lowercase().replace('/', '') in ['end turn', 'end_turn']:
+    if lowercase(text).replace('/', '') in ['end turn', 'end_turn']:
         gm.my_ans = 'End turn'
 
 @bot.message_handler(func=lambda mess:mess.text[0] == '/')
@@ -870,7 +895,7 @@ def messageType(message):
         return 'place'
     if gm.accusing:
         return 'accuse'
-    if message.text.lowercase().replace('/', '') in ['end turn', 'ask', 'accuse', 'end_turn']:
+    if lowercase(message.text).replace('/', '') in ['end turn', 'ask', 'accuse', 'end_turn']:
         return 'action'
 
     return 'ignore'
@@ -926,7 +951,7 @@ def send_all(msg, gm, bad=[]):
 
 def sendAdmin(text):
     for admin in Admins:
-        bot.send_message(admin.id, 'Admin {0} {1}: '.format(admin.first_name, admin.last_name) + text)
+        bot.send_message(admin.id, 'Admin {0} {1}: '.format(admin.first_name, admin.last_name) + str(text))
 
 
 def send_turn(pl, gm):
@@ -943,16 +968,15 @@ def printLog(text):
 
 
 def logName():
-    log = "logs ("
+    log = "game of "
     today = time.gmtime()
-    year = str(today.tm_year)
-    month = str(today.tm_mon)
-    day = str(today.tm_mday)
-    hour = str(today.tm_hour)
-    minute = str(today.tm_min)
-    seconds = str(today.tm_sec)
-    log += str(year) + '.' + str(month) + '.' + str(day) + ' ' + str(hour) + ';' + str(minute) + ';' + str(
-        seconds) + ').txt'
+    year = today.tm_year
+    month = today.tm_mon
+    day = today.tm_mday
+    hour = today.tm_hour
+    minute = today.tm_min
+    seconds = today.tm_sec
+    log += "0" * (day < 10) + str(day) + '.' + "0" * (month < 10) + str(month) + '.' + "0" * (year < 10) + str(year) + ' ' + str(hour) + ';' + str(minute) + ';' + str(seconds) + '.txt'
     return log
 
 
@@ -974,9 +998,18 @@ def main():
     for i in range(MAX_GAMES):
         addGame('')
     sendAdmin('Bot starts')
-    bot.polling()
+    while True:
+        try:
+            bot.polling()
+        except Exception as error:
+            printLog(error)
+            sendAdmin(str(error))
+            sendAdmin("I sleep 10 seconds and continue working")
+            time.sleep(10)
+            sendAdmin("I continue working")
+        else: 
+            break
 
 
 if __name__ == '__main__':
     main()
-print(__name__)

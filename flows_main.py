@@ -661,7 +661,8 @@ def status(message):
     tmp = 0
     ind = 0
     for gm in games:
-        sendAdmin("Game {} does not exist".format(ind))
+        if gm is None:
+            sendAdmin("Game {} does not exist".format(ind))
         
         if not gm.started and (tmp == 0 or len(gm.players) != 0):
             ans += gm.status() + '\n'

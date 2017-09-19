@@ -47,8 +47,8 @@ def cluedo_init():
     #vasechka_deck = CluedoDeck(people, weapons, places)
 
     people = ['Darth Vader', 'Han Solo', 'Yoda', 'Obi-Wan «Ben» Kenobi', 'Luke Skywalker', 'Leia Organa Solo']
-    places = ['on the Naboo', 'on the Tatooine', 'on the Coruscant', 'on the Alderaan', 'on the Yavin 4', 'on the Kamino', 'on the Corellia', 'on the Dantooine', 'on the Kessel']
-    weapons = ['lightsaber', 'blaster', 'thermal detonator', 'proton torpedoes', 'shotguns', 'bowcaster']
+    places = ['on Naboo', 'on Tatooine', 'on Coruscant', 'on Alderaan', 'on Yavin 4', 'on Kamino', 'on Corellia', 'on Dantooine', 'on Kessel']
+    weapons = ['lightsaber', 'blaster', 'thermal detonator', 'proton torpedo', 'shotgun', 'Death star']
     Star_Wars_deck = CluedoDeck(people, weapons, places)
 
     people = ['Indy', 'Han Solo', 'Rick Deckard', 'Dr. Richard Kimble', 'John Book', 'Colonel Graff']

@@ -10,7 +10,7 @@ import threading
 
 TOKEN = "303602093:AAGz6ihk895s3K07vYqc6eBY8InFwX4YuhQ"
 TOKEN2 = "286496122:AAGED92TDcccXHGJmgyz5oJcCcZ4TI-vTrM"
-MAX_GAMES = 1
+MAX_GAMES = 10
 
 MAX_PLAYERS = 6
 bot = telebot.TeleBot(TOKEN)

@@ -1,60 +1,58 @@
 # -*- coding: utf-8 -*-
 import telebot
-import logging
-import colorlog
-import emoji
 import time
-import sys
 import os
-import datetime
 import random as rd
 from copy import deepcopy
-import cfg
+from copy import copy
+import cluedo_cfg
 import threading
-
-
 
 TOKEN = "303602093:AAGz6ihk895s3K07vYqc6eBY8InFwX4YuhQ"
 TOKEN2 = "286496122:AAGED92TDcccXHGJmgyz5oJcCcZ4TI-vTrM"
-MAX_GAMES = 10
+MAX_GAMES = 1
 
 MAX_PLAYERS = 6
-bot = telebot.TeleBot(TOKEN)
+bot = telebot.TeleBot(TOKEN2)
 games = []
 
-
-AdminId = [186898465, 319325008]
-Admins = [telebot.types.User(id=186898465, username='antonsa', first_name='Anton', last_name='Anikushin'),
-          telebot.types.User(id=319325008, username='greatkorn', first_name='Anton', last_name='Kvasha')]
+AdminId = [186898465]  # , 319325008]
+Admins = [
+    telebot.types.User(id=186898465, username='TwoBlueCats', first_name='Anton', last_name='Anikushin', is_bot=False)]
+# telebot.types.User(id=319325008, username='greatkorn', first_name='Anton', last_name='Kvasha', is_bot=False)]
 
 curr = 0
 readyKeyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
 readyKeyboard.row(telebot.types.KeyboardButton('Yes'), telebot.types.KeyboardButton('No'))
-#removeKeyboard = telebot.types.ReplyKeyboardRemove()
+
+
+# removeKeyboard = telebot.types.ReplyKeyboardRemove()
+
 
 class Player:
-    def __init__(self, cards=[], id=186898465, username='antonsa', number=-1, first_name='Anton', last_name='Anikushin',
-                 User=None):
-        self.cards = deepcopy(cards)
+    def __init__(self,  # cards=[], number=-1,
+                 id=186898465, username='TwoBlueCats', first_name='Anton', last_name='Anikushin',
+                 user=None):
+        self.cards = deepcopy(list())
         self.alive = True
         self.auto = False
-        self.know = set(cards)
-        self.number = number
+        self.know = set(list())
+        self.number = -1
         self.asked = False
-        self.user = User
-        self.place = 'cobybook'
-        self.person = 'pen'
-        if User is None:
-            self.user = telebot.types.User(id=id, username=username, first_name=first_name)
+        self.user = copy(user)
+        self.place = 'classroom'
+        self.person = 'matan'
+        if user is None:
+            self.user = telebot.types.User(id=id, username=username, first_name=first_name, is_bot=False)
             self.id = id
             self.username = username
             self.first_name = first_name
             self.last_name = last_name
         else:
-            self.id = User.id
-            self.username = User.username
-            self.first_name = User.first_name
-            self.last_name = User.last_name
+            self.id = user.id
+            self.username = user.username
+            self.first_name = user.first_name
+            self.last_name = user.last_name
 
         self.check()
 
@@ -78,12 +76,12 @@ class Player:
         if self.last_name is None:
             self.last_name = ''
 
-    def setUser(self, User):
-        self.user = User
-        self.id = User.id
-        self.username = User.username
-        self.first_name = User.first_name
-        self.last_name = User.last_name
+    def setUser(self, user):
+        self.user = user
+        self.id = user.id
+        self.username = user.username
+        self.first_name = user.first_name
+        self.last_name = user.last_name
 
     def setNumber(self, num):
         self.number = num
@@ -98,19 +96,21 @@ class Player:
     def cardsInHand(self):
         return ', '.join(self.cards)
 
+    @property
     def knownCards(self):
         return self.know
 
 
 class Game:
     def __init__(self):
-        cfg.cluedo_init()
-        self.am_open = cfg.cluedo_open
-        self.people = cfg.cluedo_people
-        self.weapons = cfg.cluedo_weapons
-        self.places = cfg.cluedo_places
-        self.distance = cfg.cluedo_dist
-        
+        deck = deepcopy(cluedo_cfg.init())
+        self.am_open = cluedo_cfg.cluedo_open
+        self.people, self.weapons, self.places = deck.get()
+        self.deck = deck.deck()
+        self.ans = (rd.choice(self.people), rd.choice(self.weapons), rd.choice(self.places))
+        self.distance = cluedo_cfg.distance
+        self.opencards = []
+
         self.id = int(rd.random() * 10000000)
 
         self.now = 0
@@ -124,18 +124,18 @@ class Game:
         self.asked = False
         self.choose_place = False
 
-        self.ans = (rd.choice(self.people), rd.choice(self.weapons), rd.choice(self.places))  # the answer
         self.players = []
-
+        self.alive = -1
+        self.n = -1
         self.my_ans = ''
         self.now_chosen = []
         self.inter = set()
         self.who = -1
 
-    def addPlayers(self, pl):
+    def addPlayer(self, pl):
         sendAdmin(str(pl) + ' joined ' + str(self))
         self.players += [pl]
-    
+
     def deletePlayer(self, pl):
         if not self.started:
             self.players.pop(self.players.index(pl))
@@ -144,14 +144,14 @@ class Game:
             return True
         else:
             return False
-    
+
     def start(self):
         sendAdmin('Game ' + str(game_by_id[self.id]) + ' starts')
         rd.shuffle(self.players)
-        self.started = True
-        n = len(self.players)
-        self.alive = n
-        self.n = n
+        self.n = len(self.players)
+        self.alive = self.n
+        n = self.n
+
         deck = self.people + self.weapons + self.places
         for i in self.ans:
             deck.remove(i)
@@ -162,41 +162,41 @@ class Game:
         self.startPrint()
 
         other = deepcopy(self.people)
-
         am_per_player = (len(deck) - self.am_open[n]) // n
         for i in range(n):
             self.players[i].number = i
             self.players[i].setCards(
                 deck[self.am_open[n] + i * am_per_player: self.am_open[n] + i * am_per_player + am_per_player])
             bot.send_message(self.players[i].id, 'Your cards: ' + self.players[i].cardsInHand())
-            for open in self.opencards:
-                self.players[i].addCards(open)
+            for card in self.opencards:
+                self.players[i].addCards(card)
 
             self.players[i].place = rd.choice(self.places)
             self.players[i].person = rd.choice(other)
             other.remove(self.players[i].person)
             printLog(self.players[i].cards)
-        for i in range(n):
-            send_all(str(self.players[i]) + ' is ' + self.players[i].person, self)
+        for i in range(self.n):
+            sendAll(str(self.players[i]) + ' is ' + self.players[i].person, self)
 
+        self.started = True
         sendAdmin('Currently in ' + str(game_by_id[self.id]) + ': \n' + playersList(self))
-        send_all('Currently in game: \n' + playersList(self), self)
+        sendAll('Currently in game: \n' + playersList(self), self)
 
     def startPrint(self):
-        send_all("Cards in game", self)
-        send_all('People: ' + ', '.join(self.people), self)
-        send_all('Weapons: ' + ', '.join(self.weapons), self)
-        send_all('Places: ' + ', '.join(self.places), self)
-        send_all(self.open(), self)
+        sendAll("Cards in game", self)
+        sendAll('People: ' + ', '.join(self.people), self)
+        sendAll('Weapons: ' + ', '.join(self.weapons), self)
+        sendAll('Places: ' + ', '.join(self.places), self)
+        sendAll(self.open(), self)
 
     def game(self):
         while not self.won:
             while not self.players[self.now].alive or self.players[self.now].auto:
                 if self.players[self.now].auto and self.players[self.now].alive:
-                    send_all(self.players[self.now] + ' in afk mode, skips a move')
+                    sendAll(self.players[self.now] + ' in afk mode, skips a move', self)
                 self.now = (self.now + 1) % self.n
 
-            send_turn(self.players[self.now], self)
+            sendTurn(self.players[self.now], self)
 
             self.my_ans = ''
             self.won = self.turn()
@@ -222,13 +222,16 @@ class Game:
             return
 
         if len(can_go) > 1:
-            self.my_ans = ''
-            bot.send_message(pl.id, "Where will you go?", reply_markup=make(can_go))
-            self.choose_place = True
-            while self.my_ans == '':
-                pass
-            pl.place = self.my_ans
-            self.choose_place = False
+            if pl.auto:
+                pl.place = rd.choice(can_go)
+            else:
+                self.my_ans = ''
+                bot.send_message(pl.id, "Where will you go?", reply_markup=make(can_go))
+                self.choose_place = True
+                while self.my_ans == '':
+                    pass
+                pl.place = self.my_ans
+                self.choose_place = False
             bot.send_message(pl.id, 'Now you are ' + pl.place)
 
         self.my_ans = ''
@@ -252,10 +255,10 @@ class Game:
                     else:
                         self.players[another].place = self.now_chosen[2]
                     bot.send_message(pl.id, "Your choice is: " + ', '.join(self.now_chosen))
-                    send_all(str(pl) + ": Was the murder committed by " + ' '.join(self.now_chosen) + "?", self,
-                             [pl.id])
+                    sendAll(str(pl) + ": Was the murder committed by " + ' '.join(self.now_chosen) + "?", self,
+                            [pl.id])
                     self.go(self.now)
-                    if self.my_ans != "I couldn't help you" and self.my_ans != '':
+                    if self.my_ans in self.deck:
                         pl.addCards(self.my_ans)
                     self.asking = False
                 else:
@@ -273,8 +276,6 @@ class Game:
                 self.my_ans = ''
                 self.accusing = False
                 return flag
-
-        return False
 
     def end(self):
         for pl in self.players:
@@ -296,22 +297,19 @@ class Game:
         pl = self.players[self.now]
         self.now_chosen = []
         bot.send_message(pl.id, "Choose a person: ",
-                         reply_markup=make(list(set(self.people).difference(pl.knownCards()))))
+                         reply_markup=make(list(set(self.people).difference(pl.knownCards))))
         while len(self.now_chosen) != 1:
             pass
         bot.send_message(pl.id, "Choose a weapon: ",
-                         reply_markup=make(list(set(self.weapons).difference(pl.knownCards()))))
+                         reply_markup=make(list(set(self.weapons).difference(pl.knownCards))))
         while len(self.now_chosen) != 2:
             pass
         bot.send_message(pl.id, "Choose a place: ",
-                         reply_markup=make(list(set(self.places).difference(pl.knownCards()))))
+                         reply_markup=make(list(set(self.places).difference(pl.knownCards))))
         while len(self.now_chosen) != 3:
             pass
         return
-        
-        
-    #######
-    #######
+
     def go(self, index):
         self.my_ans = ''
         man = (index + 1) % self.n
@@ -319,65 +317,61 @@ class Game:
             self.my_ans = ''
             man = (man + 1) % self.n
         if man == index:
-            send_all('Nobody can help!', self)
+            sendAll('Nobody can help!', self)
         else:
             bot.send_message(self.players[index].id, self.my_ans + ' from ' + str(self.players[man]))
-            send_all('Answered by ' + str(self.players[man]), self, [self.players[index].id, self.players[man].id])
+            sendAll('Answered by ' + str(self.players[man]), self, [self.players[index].id, self.players[man].id])
         self.who = -1
-
 
     def answer(self, man):
         self.who = man
         pl = self.players[man]
-        id = pl.id
         cards = set(pl.cards)
         now = set(self.now_chosen)
         self.inter = now.intersection(cards)
         print(pl.auto)
         if len(self.inter) == 0:
             if not pl.auto:
-                bot.send_message(id, "Choose an answer: ", reply_markup=make(["I couldn't help you"]))
-                self.inter = set(["I couldn't help you"])
+                self.inter = set()
+                self.inter.add("I couldn't help you")
+                bot.send_message(pl.id, "Choose an answer: ", reply_markup=make(["I couldn't help you"]))
                 while len(self.my_ans) == 0:
                     pass
             else:
                 self.my_ans = "I couldn't help you"
-            send_all(str(self.players[man]) + " couldn't answer", self, [self.players[man].id])
+            sendAll(str(self.players[man]) + " couldn't answer", self, [self.players[man].id])
             return False
         else:
             if not pl.auto:
-                bot.send_message(id, "Choose an answer: ", reply_markup=make(list(self.inter)))
+                bot.send_message(pl.id, "Choose an answer: ", reply_markup=make(list(self.inter)))
                 while len(self.my_ans) == 0:
                     pass
             else:
                 self.my_ans = rd.choice(list(self.inter))
             return True
-        
-    ######
-    ######
-    
+
     def checking(self, ans):
         pl = self.players[self.now]
-        if check_ans(ans, self):
+        if checkAns(ans, self):
             bot.send_photo(pl.id, open('win.png', 'rb'))
-            send_all(str(pl) + " won the game!", self)
-            send_all("The correct answer is: " + ', '.join(self.who_killed()), self, [pl.id])
+            sendAll(str(pl) + " won the game!", self)
+            sendAll("The correct answer is: " + ', '.join(self.whoKilled()), self, [pl.id])
             return True
         else:
             self.players[self.now].alive = False
             self.alive -= 1
             bot.send_photo(pl.id, open('lose.jpg', 'rb'))
-            send_all(str(pl) + " accused: " + ', '.join(ans), self)
-            send_all(str(pl) + " didn't guess correctly. He leaves the game! Ha-ha, what a loser!", self)
-            bot.send_message(pl.id, "The correct answer is: " + ', '.join(self.who_killed()))
+            sendAll(str(pl) + " accused: " + ', '.join(ans), self)
+            sendAll(str(pl) + " didn't guess correctly. He leaves the game! Ha-ha, what a loser!", self)
+            bot.send_message(pl.id, "The correct answer is: " + ', '.join(self.whoKilled()))
 
         if self.alive == 1:
             for i in range(self.n):
                 pla = self.players[i]
-                if pla.alive == True:
+                if pla.alive:
                     bot.send_photo(pla.id, open('win.png', 'rb'))
-                    send_all(str(pla) + ' won the game!', self)
-                    bot.send_message(pla.id, "The correct answer is: " + ', '.join(self.who_killed()))
+                    sendAll(str(pla) + ' won the game!', self)
+                    bot.send_message(pla.id, "The correct answer is: " + ', '.join(self.whoKilled()))
                     break
             return True
         return False
@@ -400,7 +394,7 @@ class Game:
                 return elem.number
         return None
 
-    def who_killed(self):
+    def whoKilled(self):
         return self.ans
 
     def keyboard(self):
@@ -428,17 +422,29 @@ class Game:
     def status(self):
         st = "started, " if self.started else ("waiting (" + str(self.max_players - len(self.players)) + '), ')
         if st == "started, ":
-            return "Room " + str(game_by_id[self.id]) + ", " + st + ("room is empty" if len(self.players) == 0 else 'currently in room: ' + ', '.join(map(str, self.players)))
+            return "Room " + str(game_by_id[self.id]) + ", " + st + (
+                "room is empty" if len(self.players) == 0 else 'currently in room: ' + ', '.join(
+                    map(str, self.players)))
         else:
-            return "Room " + str(game_by_id[self.id]) + ", " + st + ("room is empty" if len(self.players) == 0 else 'currently in room: ' + ', '.join(map(str, self.players))) + '  /join_' + str(game_by_id[self.id])
-    
+            return "Room " + str(game_by_id[self.id]) + ", " + st + (
+                "room is empty" if len(self.players) == 0 else 'currently in room: ' + ', '.join(
+                    map(str, self.players))) + '  /join_' + str(game_by_id[self.id])
+
     def check(self):
         cnt = 0
         for pl in self.players:
             if pl.alive is True and pl.auto is False:
                 cnt += 1
         return cnt != 0
-        
+
+    def setDeck(self, deck):
+        self.am_open = cluedo_cfg.cluedo_open
+        self.people, self.weapons, self.places = deck.get()
+        self.deck = deck.deck()
+        self.ans = (rd.choice(self.people), rd.choice(self.weapons), rd.choice(self.places))
+        self.distance = cluedo_cfg.distance
+        self.opencards = []
+
 
 personToGame = dict()
 game_by_id = dict()
@@ -449,58 +455,98 @@ def running(gm):
     try:
         gm.start()
     except Exception as error:
-        printLog("Fail in game starting")
-        sendAdmin("Fail in game starting")
-    else:    
+        printLog("Fail in game starting\n" + str(error))
+        sendAdmin("Fail in game starting:\n" + str(error))
+    else:
         try:
             gm.game()
-        except:
-            printLog("Fail in game starting")
-            sendAdmin("Fail in game starting")            
-        
+        except Exception as error:
+            printLog("Fail in game\n" + str(error))
+            sendAdmin("Fail in game\n" + str(error))
+
     for play in gm.players:
         personToGame[play] = None
+
     last_id = game_by_id[gm.id] - 1
     games[last_id] = Game()
     game_by_id[games[last_id].id] = last_id + 1
 
-    
+
 def lowercase(s):
-        ans = ""
-        for i in s:
-            if ord('A') <= ord(i) and ord(i) <= ord('Z'):
-                ans += chr(ord(i) - ord('A') + ord('a'))
-            else:
-                ans += i
-        return ans
-    
-    
+    ans = ""
+    for i in s:
+        if ord('A') <= ord(i) <= ord('Z'):
+            ans += chr(ord(i) - ord('A') + ord('a'))
+        else:
+            ans += i
+    return ans
+
+
 file_name = 'logs.txt'
 
-#@bot.message_handler()
-#def trash(message):
+
+# @bot.message_handler()
+# def trash(message):
 #    print(message.text)
 
 def fromAdmin(message):
     return message.from_user.id in AdminId
 
 
-def join_error(id):
+def command_error(id):
     bot.send_message(id, 'Invalid command, please try again!')
     return
 
-#@bot.message_handler(commands=['auto'])
+
+# @bot.message_handler(commands=['auto'])
 def setAuto(message):
     gm = getGame(message)
+    pl = Player(user=message.from_user)
     if gm is None:
         bot.send_message(pl.id, 'You do not take part in any game')
         return
     pl = gm.players[gm.numberById(message.from_user.id)]
     if not pl.auto:
-        send_all(str(pl) + ' in afk mode', gm)
+        sendAll(str(pl) + ' in afk mode', gm)
     else:
-        send_all(str(pl) + ' alive again', gm)
+        sendAll(str(pl) + ' alive again', gm)
     pl.auto ^= True
+
+
+@bot.message_handler(commands=['broadcast'], func=fromAdmin)
+def forAll(message):
+    broadcast(message.text)
+
+
+@bot.message_handler(commands=['update'], func=fromAdmin)
+def update(message):
+    os.system('git pull')
+    sendAdmin('Git update and run all')
+    os.system('screen python3 cluedo_main.py')
+
+
+@bot.message_handler(commands=['rerun'], func=fromAdmin)
+def runCode(message):
+    sendAdmin('Rerun all code')
+    os.system('screen python3 cluedo_main.py')
+
+
+@bot.message_handler(commands=['deck'], func=fromAdmin)
+def printDecks(message):
+    bot.send_message(message.from_user.id, ', '.join(cluedo_cfg.cluedo_deck_list))
+
+
+@bot.message_handler(commands=['upfile'], func=fromAdmin)
+def updateFiles(message):
+    os.system('git pull')
+    sendAdmin('Git update file')
+
+
+@bot.message_handler(commands=['all'], func=fromAdmin)
+def allRegister(message):
+    for pl in personToGame.keys():
+        bot.send_message(message.from_user.id, str(pl))
+
 
 @bot.message_handler(commands=['full_end', 'restart'], func=fromAdmin)
 def botEnd(message):
@@ -510,20 +556,61 @@ def botEnd(message):
     print('full end')
     bot.stop_polling()
     exit(0)
-    
+
+
 @bot.message_handler(commands=['log'], func=fromAdmin)
 def sendLog(message):
     try:
         bot.send_document(message.from_user.id, open(file_name, "rb"))
     except Exception as error:
         bot.send_message(message.from_user.id, "Error in sending file" + ": " + str(error))
-    
+
+
+@bot.message_handler(commands=['status', 'active'], func=fromAdmin)
+def status(message):
+    print(message.text, len(games), 'admin')
+    id = message.from_user.id
+    ans = ''
+    for gm in games:
+        ans += gm.status() + '\n'
+    if ans == '':
+        ans = 'No games yet'
+    bot.send_message(id, ans)
+
+
+@bot.message_handler(commands=['set', 'set_deck'], func=lambda mes: mes.from_user.id == AdminId[0])  # only for me
+def setDeck(message):
+    pl = Player(user=message.from_user)
+    gm = getGame(pl)
+    if gm is None:
+        bot.send_message(pl.id, 'Please, join any game')
+        return
+    deck_list = cluedo_cfg.admin_init()[0]
+    bot.send_message(pl.id, "Deck list:\n" + "\n".join(deck_list))
+    mes = bot.send_message(pl.id, "Choose any deck:", reply_markup=make(deck_list))
+    bot.register_next_step_handler(mes, setDeck_2)
+
+
+def setDeck_2(message):  # only for me, deck setting part 2
+    pl = Player(user=message.from_user)
+    gm = getGame(pl)
+    if gm is None:
+        bot.send_message(pl.id, 'Please, join any game')
+        return
+    elif gm.started:
+        bot.send_message(pl.id, "Game has already started")
+        return
+    res = cluedo_cfg.admin_init(message.text)
+    gm.setDeck(res[2])
+    bot.send_message(pl.id, "The successful establishment of the deck")
+
+
 @bot.message_handler(commands=['new_game'])
 def addGame(message):
     global cnt
 
     if cnt > MAX_GAMES + MAX_GAMES // 2:
-        pl = Player(User=message.from_user)
+        pl = Player(user=message.from_user)
         bot.send_message(pl.id, "Max number of rooms created!")
         return
     gm = Game()
@@ -535,42 +622,49 @@ def addGame(message):
 
 
 @bot.message_handler(commands=['join'])
-def add_player(message):
-    pl = Player(User=message.from_user)
+def addPlayer(message):
+    pl = Player(user=message.from_user)
     if personToGame.get(pl, None) is not None:
         bot.send_message(pl.id, 'You are already in the game')
         return
     personToGame[pl] = None
-    if not message.text.startswith('/join '):
-        join_error(pl.id)
-        return
 
     try:
         game_id = int(message.text[len('/join '):].replace('<', '').replace('>', ''))
-    except:
-        join_error(pl.id)
-        return
+    except Exception as error:
+        suitable = []
+        tmp = 0
+        ind = 0
+        for gm in games:
+            if not gm.started and (tmp == 0 or len(gm.players) != 0):
+                suitable += [ind]
+                tmp += (len(gm.players) == 0)
+            ind += 1
+        if not suitable:
+            bot.send_message(pl.id, "No suitable games")
+            return
+        game_id = rd.choice(suitable) + 1
 
     if game_id > len(games) or game_id < 1:
         bot.send_message(pl.id, "No such game!")
         return
-    
+
     gm = games[game_id - 1]
     if gm is None:
         sendAdmin("Something goes wrong in joining to game. Game does not exist")
         printLog("Game number = game_id")
         sendAdmin("I reInit this game")
-        
+
         games[game_id] = Game()
         game_by_id[games[game_id].id] = game_id + 1
-        
+
     if gm.started:
         bot.send_message(pl.id, "This game has already started")
         return
-    gm.addPlayers(pl)
+    gm.addPlayer(pl)
     personToGame[pl] = gm
     bot.send_message(pl.id, "You join game " + str(gm), reply_markup=readyKeyboard)
-    send_all(str(gm) + ':\n' + playersList(gm), gm, bad=[pl.id])
+    sendAll(str(gm) + ':\n' + playersList(gm), gm, bad=[pl.id])
 
 
 @bot.message_handler(func=lambda message: message.text[:6] == '/join_')
@@ -578,26 +672,27 @@ def add_to_game(message):
     number = int(message.text[6:])
     try:
         gm = games[number - 1]
-    except:
+    except Exception as error:
         gm = None
 
     if gm is None:
         bot.send_message(message.from_user.id, "No such game")
         return
 
-    pl = Player(User = message.from_user)
+    pl = Player(user=message.from_user)
     if personToGame.get(pl, None) is not None:
         bot.send_message(pl.id, 'You are already in the game')
         return
-    gm.addPlayers(pl)
+    gm.addPlayer(pl)
     personToGame[pl] = gm
     bot.send_message(pl.id, "You join game " + str(gm), reply_markup=readyKeyboard)
-    send_all(str(gm) + ":\n" + playersList(gm), gm, bad=[pl.id])
+    sendAll(str(gm) + ":\n" + playersList(gm), gm, bad=[pl.id])
+
 
 @bot.message_handler(func=lambda mess: messageType(mess) == 'ready')
 def readyGame(message):
     gm = getGame(message)
-    pl = Player(User=message.from_user)
+    pl = Player(user=message.from_user)
     if gm is None:
         bot.send_message(pl.id, 'You do not take part in any game')
         return
@@ -605,28 +700,29 @@ def readyGame(message):
         gm.ready.add(pl)
     else:
         gm.ready.discard(pl)
-        
+
     if gm.ready == set(gm.players):
-        send_all('All the players are ready to start', gm)
+        sendAll('All the players are ready to start', gm)
+
 
 @bot.message_handler(commands=['leave'])
 def deletePlayer(message):
     gm = getGame(message)
-    pl = Player(User=message.from_user)
+    pl = Player(user=message.from_user)
     if gm is None:
         bot.send_message(pl.id, 'You do not take part in any game')
         return
     if gm.deletePlayer(pl):
         bot.send_message(pl.id, 'You have successfully left the room ' + str(gm))
-        send_all(str(pl) + ' leaves the room', gm)
+        sendAll(str(pl) + ' leaves the room', gm)
         personToGame[pl] = None
     else:
         bot.send_message(pl.id, "The game has already started. You can't leave the room")
-        
-        
+
+
 @bot.message_handler(commands=['game'])
 def start_game(message):
-    pl = Player(User=message.from_user)
+    pl = Player(user=message.from_user)
     gm = personToGame.get(pl, None)
     if gm is None:
         bot.send_message(pl.id, 'You do not take part in any game')
@@ -640,18 +736,9 @@ def start_game(message):
             for i in gm.players:
                 if i not in gm.ready:
                     ans += [str(i)]
-            bot.send_message(pl.id, "Not all players of the room ready to start.\nWait for them to start: " + ', '.join(ans))
+            bot.send_message(pl.id,
+                             "Not all players of the room ready to start.\nWait for them to start: " + ', '.join(ans))
 
-@bot.message_handler(commands=['status', 'active'], func=fromAdmin)
-def status(message):
-    print(message.text, len(games), 'admin')
-    id = message.from_user.id
-    ans = ''
-    for gm in games:
-        ans += gm.status() + '\n'
-    if ans == '':
-        ans = 'No games yet'
-    bot.send_message(id, ans)
 
 @bot.message_handler(commands=['status', 'active'])
 def status(message):
@@ -661,9 +748,6 @@ def status(message):
     tmp = 0
     ind = 0
     for gm in games:
-        if gm is None:
-            sendAdmin("Game {} does not exist".format(ind))
-        
         if not gm.started and (tmp == 0 or len(gm.players) != 0):
             ans += gm.status() + '\n'
             tmp += (len(gm.players) == 0)
@@ -675,49 +759,53 @@ def status(message):
 
 @bot.message_handler(commands=['players'], func=lambda mess: getGame(mess) is None)
 def composition(message):
-    pl = Player(User=message.from_user)
+    pl = Player(user=message.from_user)
     gm = getGame(pl)
     if gm is None:
         bot.send_message(pl.id, 'Please, join any game')
         return
-        
+
+
 @bot.message_handler(commands=['players'], func=lambda mess: getGame(mess) is not None and not getGame(mess).started)
 def composition(message):
-    pl = Player(User=message.from_user)
+    pl = Player(user=message.from_user)
     gm = getGame(pl)
     ans = []
     for elem in gm.players:
         ans.append(str(elem) + ' is ready' * (elem in gm.ready))
     bot.send_message(pl.id, '\n'.join(ans))
-    
+
+
 @bot.message_handler(commands=['players'], func=lambda mess: getGame(mess) is not None and getGame(mess).started)
 def composition(message):
-    pl = Player(User=message.from_user)
+    pl = Player(user=message.from_user)
     gm = getGame(pl)
     ans = []
     for elem in gm.players:
-        ans.append(str(elem) + ' is ' + elem.person + ' ' + elem.place + (' is afk') * elem.auto)
+        ans.append(str(elem) + ' is ' + elem.person + ' ' + elem.place + ' is afk' * elem.auto)
     bot.send_message(pl.id, '\n'.join(ans))
+
 
 @bot.message_handler(commands=['turn'])
 def WhoseTurn(message):
-    pl = Player(User=message.from_user)
+    pl = Player(user=message.from_user)
     gm = getGame(pl)
     if gm is None:
         bot.send_message(pl.id, 'Please, join any game')
         return
     bot.send_message(pl.id, gm.players[gm.now])
-    
+
+
 @bot.message_handler(commands=['cards'])
 @bot.message_handler(func=lambda message: message.text == 'Cards')
 def printCards(message):
-    pl = Player(User=message.from_user)
+    pl = Player(user=message.from_user)
     gm = getGame(pl)
     if gm is None:
         bot.send_message(pl.id, 'Please, join any game')
         return
     pl = gm.players[gm.numberById(pl.id)]
-    text = ['', '\n', '\n', '\n\nOther cards\n', 'People: ', 'Weapons: ', 'Places: ']
+    text = ['', '\n', '\n', '\n\nOther cards\n', 'People: ', '\nWeapons: ', '\nPlaces: ']
     text[0] += gm.open()
     text[1] += 'Cards in your hand: ' + pl.cardsInHand()
     text[2] += 'Cards you know: ' + ', '.join(list(pl.know.difference(set(pl.cards)).difference(gm.opencards)))
@@ -731,23 +819,23 @@ def printCards(message):
 @bot.message_handler(commands=['end'])
 def gameEnd(message):
     global games, cnt
-    pl = Player(User=message.from_user)
+    pl = Player(user=message.from_user)
     if not (message.from_user.id in AdminId or getGame(pl) is None):
-        bot.send_message(message.from_user.id, "Anton is a birch!")
+        bot.send_message(message.from_user.id, "Admin is a birch!")
         return
     elif message.from_user.id in AdminId:
         for gm in range(len(games)):
             for pl in games[gm].players:
                 personToGame[pl] = None
-                
-            last_id = game_by_id[gm.id] - 1
+
+            last_id = game_by_id[games[gm].id] - 1
             games[last_id] = Game()
             game_by_id[games[last_id].id] = last_id + 1
-            
+
         broadcast("All the rooms are closed")
         return
     else:
-        send_all('Game over. Do you want to start a new game?', getGame(pl))
+        sendAll('Game over. Do you want to start a new game?', getGame(pl))
         sendAdmin('Game over. Do you want to start a new game?')
         gm = personToGame.get(pl)
         for per in gm.players:
@@ -757,58 +845,32 @@ def gameEnd(message):
         game_by_id[games[last_id].id] = last_id + 1
 
 
-
 @bot.message_handler(commands=['rules'])
 def printRules(message):
-    bot.send_message(message.from_user.id, open('rules.txt', 'rt').read())
+    bot.send_message(message.from_user.id, open('rules.txt', 'rt', encoding="utf-8").read())
+
 
 @bot.message_handler(commands=['help', 'how_use', 'start'])
 def littleHelpMessege(message):
     text = ('/help - see this message again\n/full_help - see more help\n')
-    text += '''Firstly send /status, after it join any suitable room'''    
+    text += 'Firstly send /status, after it join any suitable room'
     bot.send_message(message.from_user.id, text)
+
 
 @bot.message_handler(commands=['commands'])
 def myCommands(message):
-    bot.send_message(message.from_user.id, open('commands.txt', 'rt').read())
+    bot.send_message(message.from_user.id, open('commands.txt', 'rt', encoding="utf-8").read())
+
 
 @bot.message_handler(commands=['full_help'])
 def bigHelp(message):
-    bot.send_message(message.from_user.id, open('help.txt', 'rt').read())
+    bot.send_message(message.from_user.id, open('help.txt', 'rt', encoding="utf-8").read())
+
 
 @bot.message_handler(commands=['feedback'])
 def feedback(message):
-    sendAdmin(message.text.replace('/feedback', '', 1))
-    
-@bot.message_handler(commands=['broadcast'], func=fromAdmin)
-def forAll(message):
-    broadcast(message.text)
+    sendAdmin("feedback by " + str(Player(message.from_user)) + ": " + message.text.replace('/feedback', '', 1))
 
-@bot.message_handler(commands=['update'], func=fromAdmin)
-def update(message):
-    os.system('git pull')
-    sendAdmin('Git update and run all')
-    os.system('screen python3 flows_main.py')
-
-@bot.message_handler(commands=['run'], func=fromAdmin)
-def runCode(message):
-    sendAdmin('Rerun all code')
-    os.system('screen python3 flows_main.py')    
-
-@bot.message_handler(commands=['deck'], func=fromAdmin)
-def printDecks(message):
-    bot.send_message(message.from_user.id, ', '.join(cfg.cluedo_deck_list))
-    
-@bot.message_handler(commands=['upfile'], func=fromAdmin)
-def updateFiles(message):
-    os.system('git pull')
-    sendAdmin('Git update file')
-    
-@bot.message_handler(commands=['all'], func=fromAdmin)
-def allRegister(message):
-    for pl in personToGame.keys():
-        bot.send_message(message.from_user.id, str(pl))
-    
 
 @bot.message_handler(func=lambda mess: messageType(mess) == 'answer')
 def gameAnswer(message):
@@ -819,6 +881,7 @@ def gameAnswer(message):
     else:
         bot.send_message(message.from_user.id, 'Item is not found')
 
+
 @bot.message_handler(func=lambda mess: messageType(mess) == 'ask')
 def gameAsk(message):
     text = message.text
@@ -827,6 +890,7 @@ def gameAsk(message):
         gm.now_chosen += [text]
     else:
         bot.send_message(message.from_user.id, 'Item is not found')
+
 
 @bot.message_handler(func=lambda mess: messageType(mess) == 'place')
 def gamePlace(message):
@@ -837,6 +901,7 @@ def gamePlace(message):
     else:
         bot.send_message(message.from_user.id, 'Item is not found')
 
+
 @bot.message_handler(func=lambda mess: messageType(mess) == 'accuse')
 def gameAccuse(message):
     text = message.text
@@ -845,6 +910,7 @@ def gameAccuse(message):
         gm.now_chosen += [text]
     else:
         bot.send_message(message.from_user.id, 'Item is not found')
+
 
 @bot.message_handler(func=lambda mess: messageType(mess) == 'action')
 def gameTurn(message):
@@ -857,42 +923,47 @@ def gameTurn(message):
     if lowercase(text).replace('/', '') in ['end turn', 'end_turn']:
         gm.my_ans = 'End turn'
 
-@bot.message_handler(func=lambda mess:mess.text[0] == '/')
+
+@bot.message_handler(func=lambda mess: mess.text[0] == '/')
 def invalidCommand(message):
     print(message.text)
     bot.send_message(message.from_user.id, 'Invalid command')
 
+
 @bot.message_handler(func=lambda mess: getGame(mess) is None or messageType(mess) == 'ignore')
 def ignore(message):
     pass
-    return    
-    
+    return
+
+
 @bot.message_handler()
 def catch(message):
     sendAdmin("AAAAAAAAAAAA\nI am in 'catch' function. WHY?!&\nmessage is:\n" + message.text)
     return
 
-def getGame(User):#raise 'TypeError'
+
+def getGame(User):  # raise 'TypeError'
     pl = User
     if isinstance(pl, telebot.types.Message):
         pl = pl.from_user
     if isinstance(pl, telebot.types.User):
-        pl = Player(User = pl)
+        pl = Player(user=pl)
     elif not isinstance(pl, Player):
         raise TypeError
     gm = personToGame.get(pl, None)
     return gm
 
+
 def messageType(message):
     gm = getGame(message)
     if gm is None:
         return 'ignore'
-        
+
     if not gm.started:
         if message.text in ['Yes', 'No']:
             return 'ready'
         return 'ignore'
-        
+
     id = message.from_user.id
     now_id = gm.players[gm.now].id
     who = gm.who
@@ -916,16 +987,17 @@ def messageType(message):
 
     return 'ignore'
 
+
 def playersList(gm):
     ans = []
     for elem in gm.players:
         ans.append(str(elem))
-    if ans == []:
+    if not ans:
         ans = ['No players yet']
     return ', '.join(ans)
 
 
-def make(arr, one_time=True):
+def make(arr):
     arr = list(arr)
     now = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True, resize_keyboard=True)
     i = 0
@@ -936,29 +1008,30 @@ def make(arr, one_time=True):
     n = len(arr)
     d = n - i
     if d == 0:
-        return now
+        pass
     elif d == 1:
         now.row(telebot.types.KeyboardButton(arr[i + 0]))
-        return now
     elif d == 2:
         now.row(telebot.types.KeyboardButton(arr[i + 0]), telebot.types.KeyboardButton(arr[i + 1]))
-        return now
+    return now
 
 
-
-def check_ans(arr, gm):
-    return sorted(gm.who_killed()) == sorted(arr)
+def checkAns(arr, gm):
+    return sorted(gm.whoKilled()) == sorted(arr)
 
 
 def broadcast(msg):
     for pl in personToGame:
         try:
             bot.send_message(pl.id, msg)
-        except:
+        except Exception as error:
+            personToGame.pop(pl)
             pass
 
 
-def send_all(msg, gm, bad=[]):
+def sendAll(msg, gm, bad=None):
+    if bad is None:
+        bad = []
     for player in gm.players:
         if player.id not in bad:
             bot.send_message(player.id, msg)
@@ -970,9 +1043,8 @@ def sendAdmin(text):
         bot.send_message(admin.id, 'Admin {0} {1}: '.format(admin.first_name, admin.last_name) + str(text))
 
 
-def send_turn(pl, gm):
-    for player in gm.players:
-        bot.send_message(player.id, "Now it's " + str(pl) + "'s turn")
+def sendTurn(pl, gm):
+    sendAll("Now it's " + str(pl) + "'s turn", gm)
     return
 
 
@@ -992,7 +1064,9 @@ def logName():
     hour = today.tm_hour
     minute = today.tm_min
     seconds = today.tm_sec
-    log += "0" * (day < 10) + str(day) + '_' + "0" * (month < 10) + str(month) + '_' + str(year) + '__' + "0" * (hour < 10) + str(hour) + '_' + "0" * (minute < 10) + str(minute) + '_' + "0" * (seconds < 10) + str(seconds) + '.txt'
+    log += "0" * (day < 10) + str(day) + '_' + "0" * (month < 10) + str(month) + '_' + str(year) + '__' + "0" * (
+        hour < 10) + str(hour) + '_' + "0" * (minute < 10) + str(minute) + '_' + "0" * (seconds < 10) + str(
+        seconds) + '.txt'
     return log
 
 
@@ -1005,8 +1079,8 @@ def dist(place1, place2, gm):
 
 
 def main():
-    global file_name
-    cfg.cluedo_init()
+    global file_name, games
+    cluedo_cfg.init()
     file_name = logName()
     loggs = open(file_name, "w")
     loggs.close()
@@ -1023,7 +1097,7 @@ def main():
             sendAdmin("I sleep 10 seconds and continue working")
             time.sleep(10)
             sendAdmin("I continue working")
-        else: 
+        else:
             break
 
 

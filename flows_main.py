@@ -16,10 +16,10 @@ MAX_PLAYERS = 6
 bot = telebot.TeleBot(TOKEN)
 games = []
 
-AdminId = [186898465]  # , 319325008]
+AdminId = [186898465, 319325008]
 Admins = [
-    telebot.types.User(id=186898465, username='TwoBlueCats', first_name='Anton', last_name='Anikushin', is_bot=False)]
-# telebot.types.User(id=319325008, username='greatkorn', first_name='Anton', last_name='Kvasha', is_bot=False)]
+    telebot.types.User(id=186898465, username='TwoBlueCats', first_name='Anton', last_name='Anikushin'),
+    telebot.types.User(id=319325008, username='greatkorn', first_name='Anton', last_name='Kvasha')]
 
 curr = 0
 readyKeyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -43,7 +43,7 @@ class Player:
         self.place = 'classroom'
         self.person = 'matan'
         if user is None:
-            self.user = telebot.types.User(id=id, username=username, first_name=first_name, is_bot=False)
+            self.user = telebot.types.User(id=id, username=username, first_name=first_name)
             self.id = id
             self.username = username
             self.first_name = first_name

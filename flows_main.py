@@ -13,7 +13,7 @@ TOKEN2 = "286496122:AAGED92TDcccXHGJmgyz5oJcCcZ4TI-vTrM"
 MAX_GAMES = 1
 
 MAX_PLAYERS = 6
-bot = telebot.TeleBot(TOKEN2)
+bot = telebot.TeleBot(TOKEN)
 games = []
 
 AdminId = [186898465]  # , 319325008]

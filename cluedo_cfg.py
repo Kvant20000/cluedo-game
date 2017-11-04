@@ -35,6 +35,7 @@ class CluedoDeck:
     def deck(self):
         return self.people + self.weapons + self.places
 
+
 def init():
     global cluedo_people, cluedo_places, cluedo_weapons, cluedo_deck_list
     people = ["Miss Scarlett", "Professor Plum", "Lady Peacock", "Mr. Green", "Colonel Mustard", "Mrs. White"]
@@ -107,13 +108,8 @@ def admin_init(name=None):
     weapons = ["ejudge", "polygon", "hole punch", "bike", "computer", "test"]
     SIS_deck = CluedoDeck(people, weapons, places)
 
-    people = ["Leps", "Piont", "Chernyshov", "Gleb", "Pak", "Arzhantsev"]
-    places = ["in the computer class", "in the main building", "in the study office", "", "", "", "", "", ""]
-    weapons = ["computer", "algorithm", "complexity", "late teacher", "", ""]
-    CS_deck = CluedoDeck(people, weapons, places)
-
-    decks = [classic_deck, Harry_Potter_deck, Star_Wars_deck, Harrison_Ford_deck, vasechka_deck, SIS_deck, CS_deck]
-    deck_list = ["classic", "Harry Potter", "Star Wars", "Harrison Ford", "vasechka", "SIS", "CS"]
+    decks = [classic_deck, Harry_Potter_deck, Star_Wars_deck, Harrison_Ford_deck, vasechka_deck, SIS_deck]
+    deck_list = ["classic", "Harry Potter", "Star Wars", "Harrison Ford", "vasechka", "SIS"]
     if name not in deck_list:
         return [deck_list, False, None]
     else:

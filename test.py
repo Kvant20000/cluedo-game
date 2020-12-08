@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import telebot
 
-TOKEN2 = "286496122:AAGED92TDcccXHGJmgyz5oJcCcZ4TI-vTrM"
+TOKEN2 = # TOKEN HERE
 
 bot = telebot.TeleBot(TOKEN2)
-myID = 186898465  # admin id
+myID = # admin id
 
 
 @bot.message_handler(commands=['help'])

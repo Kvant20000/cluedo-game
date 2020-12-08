@@ -8,18 +8,15 @@ from copy import copy
 import cluedo_cfg
 import threading
 
-TOKEN = "303602093:AAGz6ihk895s3K07vYqc6eBY8InFwX4YuhQ"
-TOKEN2 = "286496122:AAGED92TDcccXHGJmgyz5oJcCcZ4TI-vTrM"
+TOKEN = # TOKEN HERE
 MAX_GAMES = 10
 
 MAX_PLAYERS = 6
 bot = telebot.TeleBot(TOKEN)
 games = []
 
-AdminId = [186898465, 319325008]
-Admins = [
-    telebot.types.User(id=186898465, username='TwoBlueCats', first_name='Anton', last_name='Anikushin'),
-    telebot.types.User(id=319325008, username='greatkorn', first_name='Anton', last_name='Kvasha')]
+AdminId = []
+Admins = []
 
 curr = 0
 readyKeyboard = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True)

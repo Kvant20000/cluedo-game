@@ -10,8 +10,7 @@ import cfg
 import threading
 
 
-TOKEN = "303602093:AAGz6ihk895s3K07vYqc6eBY8InFwX4YuhQ"
-TOKEN_2 = "286496122:AAGED92TDcccXHGJmgyz5oJcCcZ4TI-vTrM"
+TOKEN = # TOKEN HERE
 MAX_GAMES = 10
 
 ###
@@ -26,11 +25,8 @@ def allasd(message):
 
 game = None
 
-AdminId = [186898465, 319325008]
-Admins = [
-          telebot.types.User(id=186898465, username='TwoBlueCats', first_name='Anton', last_name='Anikushin'),
-          #telebot.types.User(id=319325008, username='greatkorn', first_name='Anton', last_name='Kvasha')
-          ]
+AdminId = []
+Admins = []
 
 common_cards = ["bang", "miss", "beer", "saloon", "shop", "draw", "panic", "tnn", "duel", "gatling", "indeans"]
 special_cards = ["weapon", "mustang", "zoom", "barrel", "prison", "dynamite"]
